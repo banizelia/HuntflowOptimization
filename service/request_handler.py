@@ -2,12 +2,10 @@ import hashlib
 import hmac
 import os
 
-from dotenv import load_dotenv
 from flask import jsonify
 
-from handler import handle_applicant
+from service.applicant_handler import handle_applicant
 
-load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 if not SECRET_KEY:

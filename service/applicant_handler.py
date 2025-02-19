@@ -1,6 +1,5 @@
-from ai_evaluation import evaluate_candidate
-from huntflow_api import get_status_id_by_name, update_candidate_status
-
+from service.ai_evaluation import evaluate_candidate
+from api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
 
 def handle_applicant(data):
     meta = data.get('meta', {})

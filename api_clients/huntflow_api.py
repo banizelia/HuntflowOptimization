@@ -1,38 +1,26 @@
 import logging
 import os
 from typing import Optional, List, Dict, Any
-
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+from config.env_updater import update_env_file
 
 HUNTFLOW_BASE_URL = os.getenv('HUNTFLOW_BASE_URL')
-API_TOKEN = os.getenv('API_TOKEN')
-REFRESH_TOKEN = os.getenv('REFRESH_TOKEN')
-account_id = os.getenv('ACCOUNT_ID')
-
-required_vars_huntflow = [
-    'HUNTFLOW_BASE_URL', 'API_TOKEN', 'REFRESH_TOKEN',
-    'ACCOUNT_ID'
-]
-missing_vars_huntflow = [var for var in required_vars_huntflow if os.getenv(var) is None]
-if missing_vars_huntflow:
-    raise EnvironmentError(f"Missing required environment variables for Huntflow: {', '.join(missing_vars_huntflow)}")
+HUNTFLOW_API_TOKEN = os.getenv('HUNTFLOW_API_TOKEN')
+HUNTFLOW_REFRESH_TOKEN = os.getenv('HUNTFLOW_REFRESH_TOKEN')
+HUNTFLOW_ACCOUNT_ID = os.getenv('HUNTFLOW_ACCOUNT_ID')
 
 headers = {
-    'Authorization': f'Bearer {API_TOKEN}',
+    'Authorization': f'Bearer {HUNTFLOW_API_TOKEN}',
     'Content-Type': 'application/json'
 }
 
 session = requests.Session()
 session.headers.update(headers)
 
-
-
 def refresh_access_token() -> Optional[str]:
     refresh_url = f"{HUNTFLOW_BASE_URL}/token/refresh"
-    payload = {"refresh_token": REFRESH_TOKEN}
+    payload = {"refresh_token": HUNTFLOW_REFRESH_TOKEN}
     try:
         response = session.post(
             refresh_url,
@@ -47,11 +35,8 @@ def refresh_access_token() -> Optional[str]:
         if new_access_token and new_refresh_token:
             session.headers['Authorization'] = f'Bearer {new_access_token}'
 
-            os.environ['API_TOKEN'] = new_access_token
-            os.environ['REFRESH_TOKEN'] = new_refresh_token
-
-            update_env_file('API_TOKEN', new_access_token)
-            update_env_file('REFRESH_TOKEN', new_refresh_token)
+            update_env_file('HUNTFLOW_API_TOKEN', new_access_token)
+            update_env_file('HUNTFLOW_REFRESH_TOKEN', new_refresh_token)
 
             logging.info('Tokens successfully refreshed.')
             return new_access_token
@@ -62,11 +47,11 @@ def refresh_access_token() -> Optional[str]:
         logging.error(f"Error refreshing tokens: {e}")
         return None
 
+
 def create_applicant(applicant_data: Dict[str, Any]) -> Optional[int]:
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants"
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants"
     try:
         response = session.post(url, json=applicant_data)
-        # Если токен просрочен, пробуем обновить его и повторить запрос
         if response.status_code == 401:
             error = response.json().get("errors", [{}])[0]
             if error.get("detail") == "token_expired":
@@ -85,52 +70,32 @@ def create_applicant(applicant_data: Dict[str, Any]) -> Optional[int]:
         logging.error(f"Error creating applicant: {e}")
         return None
 
-def get_status_id_by_name(status_name : str):
+
+def get_status_id_by_name(status_name: str):
     statuses = get_statuses()
-    status_info = next((status for status in statuses if status.get("name", "").lower() == status_name.lower()), None)
-    # if status_info is None:
-        # todo добавить обработку, если нет нужного этапа
-    status_id = status_info.get('id')
+    status_info = next(
+        (status for status in statuses if status.get("name", "").lower() == status_name.lower()),
+        None
+    )
+    #todo Если статус не найден, можно добавить обработку этой ситуации
+    status_id = status_info.get('id') if status_info else None
     return status_id
-
-def update_env_file(key: str, value: str) -> None:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    env_path_local = os.path.join(base_dir, '.env')
-
-    try:
-        with open(env_path_local, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-
-        with open(env_path_local, 'w', encoding='utf-8') as file:
-            for line in lines:
-                if line.startswith(f'{key}='):
-                    file.write(f'{key}={value}\n')
-                else:
-                    file.write(line)
-        logging.info(f".env file updated: {key}")
-    except IOError as e:
-        logging.error(f"Error updating .env file: {e}")
 
 
 def get_vacancies(
-        state: str = "OPEN",    # статус вакансии ("OPEN", "CLOSED", "HOLD")
-        count: int = 50,        # количество элементов на странице
-        page: int = 1,          # номер страницы
-        mine: bool = False      # Отображать только вакансии текущего пользователя
+        state: str = "OPEN",
+        count: int = 50,
+        page: int = 1,
+        mine: bool = False
 ) -> List[Dict[str, Any]]:
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/vacancies"
-    params = {
-        "state": state,
-        "count": count,
-        "page": page,
-        "mine": mine
-    }
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/vacancies"
+    params = {"state": state, "count": count, "page": page, "mine": mine}
     try:
         r = session.get(url, params=params)
         if r.status_code == 401:
             err = r.json().get('errors', [{}])[0]
             if err.get('detail') == 'token_expired':
-                logging.info("Токен просрочен. Обновляем...")
+                logging.info("Token expired. Refreshing...")
                 if refresh_access_token():
                     r = session.get(url, params=params)
                 else:
@@ -138,26 +103,25 @@ def get_vacancies(
         r.raise_for_status()
         return r.json().get('items', [])
     except requests.RequestException as e:
-        logging.error(f"Ошибка при получении списка вакансий: {e}")
+        logging.error(f"Error fetching vacancies: {e}")
         return []
-    
 
-def get_vacancy(vacancy_id) -> Optional[str]:
+
+def get_vacancy(vacancy_id):
     try:
-        url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/vacancies/{vacancy_id}"
+        url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/vacancies/{vacancy_id}"
         response = session.get(url)
 
         if response.status_code == 401:
             error = response.json().get('errors', [{}])[0]
             if error.get('detail') == 'token_expired':
-                logging.info('Token expired. Attempting to refresh.')
+                logging.info('Token expired. Refreshing...')
                 new_access = refresh_access_token()
                 if new_access:
                     session.headers['Authorization'] = f'Bearer {new_access}'
-                    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/vacancies/{vacancy_id}"
                     response = session.get(url)
                 else:
-                    logging.error('Failed to refresh tokens. Aborting vacancy fetch.')
+                    logging.error('Failed to refresh token. Aborting fetch.')
                     return None
 
         response.raise_for_status()
@@ -167,56 +131,36 @@ def get_vacancy(vacancy_id) -> Optional[str]:
         return None
 
 
-def update_candidate_status(applicant_id : int, target_status_id : int, vacancy_id : int, comment : str) -> Optional[Dict[str, Any]]:
-    # applicant_id = candidate.get('id')
-    # if not applicant_id:
-    #     logging.error("Candidate ID is missing.")
-    #     return None
-
-    params = {
-        "status": target_status_id,
-        "vacancy": vacancy_id,
-        "comment": comment,
-    }
-
+def update_candidate_status(applicant_id: int, target_status_id: int, vacancy_id: int, comment: str) -> Optional[Dict[str, Any]]:
+    params = {"status": target_status_id, "vacancy": vacancy_id, "comment": comment}
     try:
-        url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants/{applicant_id}/vacancy"
+        url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants/{applicant_id}/vacancy"
         response = session.put(url, json=params)
         response.raise_for_status()
         data = response.json()
         logging.info(f"Updated candidate {applicant_id} to status {target_status_id}.")
         return data
     except requests.RequestException as e:
-        logging.error(f"Error updating status for candidate {applicant_id}: {e}")
+        logging.error(f"Error updating candidate status: {e}")
         return None
 
 
-def add_comment(applicant_id: int, vacancy_id : int, status_id : int, text: str) -> Optional[Dict[str, Any]]:
-    # applicant_id = candidate.get('id')
-    # if not applicant_id:
-    #     logging.error("Candidate ID is missing.")
-    #     return None
-
-    params = {
-        "vacancy": vacancy_id,
-        "status": status_id,
-        "comment": text,
-    }
-
+def add_comment(applicant_id: int, vacancy_id: int, status_id: int, text: str) -> Optional[Dict[str, Any]]:
+    params = {"vacancy": vacancy_id, "status": status_id, "comment": text}
     try:
-        url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants/{applicant_id}/vacancy"
+        url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants/{applicant_id}/vacancy"
         response = session.put(url, json=params)
         response.raise_for_status()
         data = response.json()
         logging.info(f"Added comment to candidate {applicant_id}.")
         return data
     except requests.RequestException as e:
-        logging.error(f"Error adding comment for candidate {applicant_id}: {e}")
+        logging.error(f"Error adding comment: {e}")
         return None
 
 
 def get_statuses(removed: bool = False) -> List[Dict[str, Any]]:
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/vacancies/statuses"
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/vacancies/statuses"
     try:
         r = session.get(url)
         if r.status_code == 401:
@@ -232,50 +176,48 @@ def get_statuses(removed: bool = False) -> List[Dict[str, Any]]:
             statuses = [status for status in statuses if status.get('removed') is None]
         return statuses
     except requests.RequestException as e:
-        logging.error(f"Ошибка при получении статусов: {e}")
+        logging.error(f"Error fetching statuses: {e}")
         return []
 
 
 def get_vacancy_desc(vacancy_id):
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/vacancies/{vacancy_id}"
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/vacancies/{vacancy_id}"
     try:
         vac = session.get(url)
         vac.raise_for_status()
         return vac.json()
     except requests.RequestException as e:
-        logging.error(f"Ошибка при получении списка вакансий: {e}")
+        logging.error(f"Error fetching vacancy description: {e}")
         return []
 
 
 def get_resume(applicant_id, external_id):
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants/{applicant_id}/externals/{external_id}"
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants/{applicant_id}/externals/{external_id}"
     try:
         r = session.get(url)
         r.raise_for_status()
         return r.json()
     except requests.RequestException as e:
-        logging.error(f"Ошибка при получении списка вакансий: {e}")
+        logging.error(f"Error fetching resume: {e}")
         return []
 
 
 def get_applicant(applicant_id):
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants/{applicant_id}"
-
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants/{applicant_id}"
     a = session.get(url)
     a.raise_for_status()
-    
     return a.json()
 
 
 def get_applicants(vacancy_id: int, status_id: int) -> List[Dict[str, Any]]:
-    url = f"{HUNTFLOW_BASE_URL}/accounts/{account_id}/applicants"
+    url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants"
     params = {'vacancy': vacancy_id, 'status': status_id, 'limit': 100, 'offset': 0}
     candidates = []
     while True:
         try:
             r = session.get(url, params=params)
             if r.status_code != 200:
-                logging.error(f"Ошибка {r.status_code} при получении кандидатов.")
+                logging.error(f"Error fetching applicants: {r.status_code}")
                 break
             data = r.json()
             candidates.extend(data.get('items', []))
@@ -283,6 +225,6 @@ def get_applicants(vacancy_id: int, status_id: int) -> List[Dict[str, Any]]:
                 break
             params['offset'] += params['limit']
         except requests.RequestException as e:
-            logging.error(f"Ошибка при получении кандидатов: {e}")
+            logging.error(f"Error fetching applicants: {e}")
             break
     return candidates

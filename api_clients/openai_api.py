@@ -1,17 +1,12 @@
-import json
 import logging
 import os
 from datetime import date
-
-from dotenv import load_dotenv
 from openai import OpenAI
 
 from model.answer_to_evaluation import CandidateEvaluationAnswer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-load_dotenv()
 
 CHATGPT_API_TOKEN = os.getenv('CHATGPT_API_TOKEN')
 
@@ -22,15 +17,6 @@ else:
 
 client = OpenAI(api_key=CHATGPT_API_TOKEN)
 logger.info("Клиент OpenAI успешно создан")
-
-
-def log_to_jsonl(conversation: dict, filename: str = "gpt_requests.jsonl") -> None:
-    try:
-        with open(filename, "a", encoding="utf-8") as f:
-            f.write(json.dumps(conversation, ensure_ascii=False) + "\n")
-        logger.debug("Запись в %s выполнена успешно.", filename)
-    except Exception as e:
-        logger.error("Ошибка при записи в файл %s: %s", filename, e)
 
 
 def ask_gpt(vacancy_description: str, candidate_resume: str) -> CandidateEvaluationAnswer:
@@ -82,17 +68,7 @@ def ask_gpt(vacancy_description: str, candidate_resume: str) -> CandidateEvaluat
     )
 
     answer = completion.choices[0].message.parsed
-    assistant_content = completion.choices[0].message.content
 
     logger.debug("Ответ от GPT получен: %s", answer)
-
-    conversation = {
-        "messages": [
-            {"role": "system", "content": prompt_system},
-            {"role": "user", "content": prompt_user},
-            {"role": "assistant", "content": assistant_content}
-        ]
-    }
-    log_to_jsonl(conversation)
 
     return answer

@@ -1,6 +1,13 @@
+from pathlib import Path
+from dotenv import load_dotenv
+
+env_path = Path(__file__).resolve().parent / "config" / ".env"
+
+load_dotenv(dotenv_path=env_path)
+
 from flasgger import Swagger
 from flask import Flask, request
-from request_handler import handle_request
+from service.request_handler import handle_request
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -58,4 +65,4 @@ def new_action():
     return handle_request(request)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
