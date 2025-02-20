@@ -3,7 +3,7 @@ import os
 from datetime import date
 from openai import OpenAI
 
-from model.answer_to_evaluation import CandidateEvaluationAnswer
+from model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
