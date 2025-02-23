@@ -1,7 +1,7 @@
 import logging
 
-from service.ai_evaluation import evaluate_candidate
-from api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
+from src.service.ai_evaluation import evaluate_candidate
+from src.api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

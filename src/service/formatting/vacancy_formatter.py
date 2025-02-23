@@ -1,6 +1,6 @@
 import logging
 
-from service.formatting.html_cleaner import clean_html
+from src.service.formatting.html_cleaner import clean_html
 
 logger = logging.getLogger(__name__)
 

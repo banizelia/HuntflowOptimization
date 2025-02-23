@@ -1,12 +1,12 @@
 import logging
-from api_clients.huntflow_api import (
+from src.api_clients.huntflow_api import (
     get_resume,
     get_vacancy_desc,
     get_applicant,
 )
-from api_clients.openai_api import ask_gpt
-from service.formatting.resume_formatter import format_resume
-from service.formatting.vacancy_formatter import format_vacancy
+from src.api_clients.openai_api import ask_gpt
+from src.service.formatting.resume_formatter import format_resume
+from src.service.formatting.vacancy_formatter import format_vacancy
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

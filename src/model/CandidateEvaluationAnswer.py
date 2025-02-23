@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from model.TargetStage import TargetStage
+from src.model.TargetStage import TargetStage
 
 class CandidateEvaluationAnswer(BaseModel):
     target_stage: TargetStage

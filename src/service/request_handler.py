@@ -4,7 +4,7 @@ import os
 
 from flask import jsonify
 
-from service.applicant_handler import handle_applicant
+from src.service.applicant_handler import handle_applicant
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
