@@ -36,4 +36,3 @@ def format_vacancy(vacancy: dict) -> str:
     )
     logger.debug("Отформатированное описание вакансии: %s", formatted_description)
     return formatted_description
-

@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
+
 from dotenv import set_key
+
 
 def update_env_file(key: str, value: str) -> None:
     """

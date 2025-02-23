@@ -1,13 +1,15 @@
+import hashlib
+import hmac
 import json
 import os
-import hmac
-import hashlib
+
 
 def test_no_data(client):
     response = client.post('/huntflow/webhook/applicant', data='null', content_type='application/json')
     assert response.status_code == 400
     data = response.get_json()
     assert "Отсутствуют данные" in data.get("error", "")
+
 
 def test_missing_signature(client):
     payload = {"key": "value"}
@@ -18,6 +20,7 @@ def test_missing_signature(client):
     assert response.status_code == 401
     data = response.get_json()
     assert "Отсутствует заголовок X-Huntflow-Signature" in data.get("error", "")
+
 
 def test_invalid_signature(client):
     payload = {"key": "value"}
@@ -35,6 +38,7 @@ def test_invalid_signature(client):
     assert response.status_code == 401
     data = response.get_json()
     assert "Неверная подпись" in data.get("error", "")
+
 
 def test_valid_request(client):
     payload = {

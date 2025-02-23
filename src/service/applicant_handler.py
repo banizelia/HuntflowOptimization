@@ -1,10 +1,11 @@
 import logging
 
-from src.service.ai_evaluation import evaluate_candidate
 from src.api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
+from src.service.ai_evaluation import evaluate_candidate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
 
 def handle_applicant(data):
     meta = data.get('meta', {})

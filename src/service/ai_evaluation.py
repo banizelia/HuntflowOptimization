@@ -1,4 +1,5 @@
 import logging
+
 from src.api_clients.huntflow_api import (
     get_resume,
     get_vacancy_desc,
@@ -11,7 +12,8 @@ from src.service.formatting.vacancy_formatter import format_vacancy
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def evaluate_candidate(c_id : int, vacancy_id : int):
+
+def evaluate_candidate(c_id: int, vacancy_id: int):
     full_resume = get_formatted_full_resume(c_id)
     vacancy_description = get_formatted_vacancy(vacancy_id)
 

@@ -1,4 +1,5 @@
 import os
+
 os.environ.setdefault("CHATGPT_API_TOKEN", "dummy_api_key")
 os.environ.setdefault("OPENAI_API_KEY", "dummy_api_key")
 os.environ.setdefault("SECRET_KEY", "dummy_secret_key")
@@ -10,11 +11,13 @@ import pytest
 from flask import Flask
 from src.service.request_handler import handle_request
 
+
 @pytest.fixture(autouse=True)
 def app_context():
     app = Flask(__name__)
     with app.app_context():
         yield
+
 
 class DummyRequest:
     def __init__(self, data, headers):
@@ -27,11 +30,13 @@ class DummyRequest:
         except Exception:
             return None
 
+
 def test_handle_request_no_data():
     response, status = handle_request(None)
     resp_json = response.get_json()
     assert status == 400
     assert resp_json.get("error") == "Отсутствуют данные"
+
 
 def test_handle_request_missing_signature():
     payload = {"key": "value"}
@@ -45,6 +50,7 @@ def test_handle_request_missing_signature():
     assert status == 401
     assert resp_json.get("error") == "Отсутствует заголовок X-Huntflow-Signature"
 
+
 def test_handle_request_invalid_signature():
     payload = {"key": "value"}
     data_bytes = json.dumps(payload).encode('utf-8')
@@ -57,6 +63,7 @@ def test_handle_request_invalid_signature():
     resp_json = response.get_json()
     assert status == 401
     assert resp_json.get("error") == "Неверная подпись"
+
 
 def test_handle_request_valid(monkeypatch):
     test_secret = "testsecret"
@@ -72,8 +79,10 @@ def test_handle_request_valid(monkeypatch):
     dummy_req = DummyRequest(data_bytes, headers)
 
     called_data = []
+
     def dummy_handle_applicant(data):
         called_data.append(data)
+
     monkeypatch.setattr("src.service.request_handler.handle_applicant", dummy_handle_applicant)
 
     response, status = handle_request(dummy_req)
@@ -82,6 +91,7 @@ def test_handle_request_valid(monkeypatch):
     assert called_data[0] == payload
     assert resp_json.get("success") == "Данные обработаны"
     assert status == 200
+
 
 def test_handle_request_non_applicant_event(monkeypatch):
     test_secret = "testsecret"
@@ -97,9 +107,11 @@ def test_handle_request_non_applicant_event(monkeypatch):
     dummy_req = DummyRequest(data_bytes, headers)
 
     called = False
+
     def dummy_handle_applicant(data):
         nonlocal called
         called = True
+
     monkeypatch.setattr("src.service.request_handler.handle_applicant", dummy_handle_applicant)
 
     response, status = handle_request(dummy_req)

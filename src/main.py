@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 env_path = Path(__file__).resolve().parent / "config" / ".env"
@@ -10,6 +11,7 @@ from src.service.request_handler import handle_request
 
 app = Flask(__name__)
 swagger = Swagger(app)
+
 
 @app.route('/huntflow/webhook/applicant', methods=['POST'])
 def new_action():
@@ -62,6 +64,7 @@ def new_action():
     """
 
     return handle_request(request)
+
 
 if __name__ == '__main__':
     app.run()

@@ -1,5 +1,5 @@
-import pytest
 from src.service.formatting.vacancy_formatter import format_vacancy
+
 
 def test_format_vacancy_minimal():
     vacancy = {}
@@ -15,6 +15,7 @@ def test_format_vacancy_minimal():
     )
     result = format_vacancy(vacancy)
     assert result == expected
+
 
 def test_format_vacancy_with_html():
     vacancy = {
@@ -36,6 +37,7 @@ def test_format_vacancy_with_html():
     )
     result = format_vacancy(vacancy)
     assert result == expected
+
 
 def test_format_vacancy_missing_fields():
     vacancy = {

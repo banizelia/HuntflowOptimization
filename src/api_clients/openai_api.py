@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import date
+
 from openai import OpenAI
 
 from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer

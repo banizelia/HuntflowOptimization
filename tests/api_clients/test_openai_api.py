@@ -2,17 +2,21 @@ from src.api_clients import openai_api
 from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
 from src.model.TargetStage import TargetStage
 
+
 class DummyMessage:
     def __init__(self, parsed):
         self.parsed = parsed
+
 
 class DummyChoice:
     def __init__(self, parsed):
         self.message = DummyMessage(parsed)
 
+
 class DummyCompletion:
     def __init__(self, choices):
         self.choices = choices
+
 
 def dummy_parse(*args, **kwargs):
     dummy_answer = CandidateEvaluationAnswer(

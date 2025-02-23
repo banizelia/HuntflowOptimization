@@ -1,5 +1,7 @@
 import logging
+
 from src.config import env_updater
+
 
 def test_update_env_file_success(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
@@ -8,6 +10,7 @@ def test_update_env_file_success(tmp_path, monkeypatch):
     env_updater.update_env_file("KEY1", "new_value")
     content = env_file.read_text()
     assert "KEY1='new_value'" in content
+
 
 def test_update_env_file_file_not_exist(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr(env_updater, "__file__", str(tmp_path / "fake_env_updater.py"))

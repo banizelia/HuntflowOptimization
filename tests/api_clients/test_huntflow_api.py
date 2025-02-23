@@ -1,5 +1,7 @@
 import requests
+
 from src.api_clients import huntflow_api
+
 
 class DummyResponse:
     def __init__(self, status_code, json_data):
@@ -13,6 +15,7 @@ class DummyResponse:
         if self.status_code >= 400:
             raise requests.RequestException("HTTP Error")
 
+
 def test_refresh_access_token_success(monkeypatch):
     dummy_response = DummyResponse(200, {
         "access_token": "new_api_token",
@@ -25,6 +28,7 @@ def test_refresh_access_token_success(monkeypatch):
     assert token == "new_api_token"
     assert huntflow_api.session.headers["Authorization"] == "Bearer new_api_token"
 
+
 def test_refresh_access_token_failure(monkeypatch):
     def dummy_post(url, json, headers):
         raise requests.RequestException("Network error")
@@ -32,6 +36,7 @@ def test_refresh_access_token_failure(monkeypatch):
     monkeypatch.setattr(huntflow_api.session, "post", dummy_post)
     token = huntflow_api.refresh_access_token()
     assert token is None
+
 
 def test_create_applicant_success(monkeypatch):
     applicant_data = {"name": "John Doe"}
@@ -74,11 +79,13 @@ def test_get_status_id_by_name(monkeypatch):
     status_id_none = huntflow_api.get_status_id_by_name("неизвестный")
     assert status_id_none is None
 
+
 def test_send_request_success(monkeypatch):
     dummy_resp = DummyResponse(200, {"result": "ok"})
     monkeypatch.setattr(huntflow_api.session, "request", lambda method, url, **kwargs: dummy_resp)
     response = huntflow_api.send_request("GET", "http://example.com")
     assert response.json() == {"result": "ok"}
+
 
 def test_send_request_token_expired(monkeypatch):
     dummy_resp_401 = DummyResponse(401, {"errors": [{"detail": "token_expired"}]})
@@ -97,6 +104,7 @@ def test_send_request_token_expired(monkeypatch):
     response = huntflow_api.send_request("GET", "http://example.com")
     assert response.json() == {"result": "ok"}
 
+
 def test_get_vacancies(monkeypatch):
     dummy_resp = DummyResponse(200, {
         "items": [
@@ -110,12 +118,14 @@ def test_get_vacancies(monkeypatch):
     assert len(vacancies) == 2
     assert vacancies[0]["title"] == "Vacancy 1"
 
+
 def test_get_vacancy(monkeypatch):
     dummy_data = {"id": 10, "title": "Vacancy Title"}
     dummy_resp = DummyResponse(200, dummy_data)
     monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_resp)
     vacancy = huntflow_api.get_vacancy(10)
     assert vacancy == dummy_data
+
 
 def test_update_candidate_status(monkeypatch):
     dummy_data = {"status": "updated"}
@@ -124,12 +134,14 @@ def test_update_candidate_status(monkeypatch):
     result = huntflow_api.update_candidate_status(1, 2, 3, "Test comment")
     assert result == dummy_data
 
+
 def test_add_comment(monkeypatch):
     dummy_data = {"comment": "added"}
     dummy_resp = DummyResponse(200, dummy_data)
     monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_resp)
     result = huntflow_api.add_comment(1, 2, 3, "Test comment")
     assert result == dummy_data
+
 
 def test_get_statuses(monkeypatch):
     dummy_items = [
@@ -142,12 +154,14 @@ def test_get_statuses(monkeypatch):
     assert len(statuses) == 1
     assert statuses[0]["name"] == "Status 1"
 
+
 def test_get_vacancy_desc(monkeypatch):
     dummy_data = {"id": 10, "description": "Vacancy description"}
     dummy_resp = DummyResponse(200, dummy_data)
     monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_resp)
     desc = huntflow_api.get_vacancy_desc(10)
     assert desc == dummy_data
+
 
 def test_get_resume(monkeypatch):
     dummy_data = {"resume": "data"}
@@ -156,12 +170,14 @@ def test_get_resume(monkeypatch):
     resume = huntflow_api.get_resume(1, "external_1")
     assert resume == dummy_data
 
+
 def test_get_applicant(monkeypatch):
     dummy_data = {"id": 1, "name": "Applicant Name"}
     dummy_resp = DummyResponse(200, dummy_data)
     monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_resp)
     applicant = huntflow_api.get_applicant(1)
     assert applicant == dummy_data
+
 
 def test_get_applicants(monkeypatch):
     first_page = {"items": [{"id": 1}, {"id": 2}], "next": True}
@@ -175,6 +191,7 @@ def test_get_applicants(monkeypatch):
         else:
             return DummyResponse(200, second_page)
 
-    monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_request(method, url, **kwargs))
+    monkeypatch.setattr(huntflow_api, "send_request",
+                        lambda method, url, **kwargs: dummy_request(method, url, **kwargs))
     applicants = huntflow_api.get_applicants(1, 2)
     assert len(applicants) == 3

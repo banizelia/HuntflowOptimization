@@ -1,5 +1,7 @@
 import pytest
+
 from src.main import app as flask_app
+
 
 @pytest.fixture(autouse=True)
 def set_test_env(monkeypatch):
@@ -12,6 +14,7 @@ def set_test_env(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "dummy_test_token")
     yield
 
+
 @pytest.fixture
 def app():
     flask_app.config.update({
@@ -19,6 +22,7 @@ def app():
         "DEBUG": True,
     })
     yield flask_app
+
 
 @pytest.fixture
 def client(app):

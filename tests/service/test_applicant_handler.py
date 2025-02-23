@@ -1,5 +1,6 @@
 from src.service.applicant_handler import handle_applicant
 
+
 def test_handle_applicant_wrong_webhook_action(monkeypatch, caplog):
     data = {
         "meta": {"webhook_action": "OTHER_ACTION"},
@@ -7,6 +8,7 @@ def test_handle_applicant_wrong_webhook_action(monkeypatch, caplog):
     }
 
     evaluate_called = False
+
     def dummy_evaluate_candidate(candidate_id, vacancy_id):
         nonlocal evaluate_called
         evaluate_called = True
@@ -18,6 +20,7 @@ def test_handle_applicant_wrong_webhook_action(monkeypatch, caplog):
     assert "Обработка только для 'STATUS'" in caplog.text
     assert not evaluate_called
 
+
 def test_handle_applicant_wrong_status(monkeypatch, caplog):
     data = {
         "meta": {"webhook_action": "STATUS"},
@@ -27,6 +30,7 @@ def test_handle_applicant_wrong_status(monkeypatch, caplog):
     }
 
     evaluate_called = False
+
     def dummy_evaluate_candidate(candidate_id, vacancy_id):
         nonlocal evaluate_called
         evaluate_called = True
@@ -36,6 +40,7 @@ def test_handle_applicant_wrong_status(monkeypatch, caplog):
     handle_applicant(data)
     assert "не соответствует 'Отклики'" in caplog.text
     assert not evaluate_called
+
 
 def test_handle_applicant_missing_candidate_id(monkeypatch, caplog):
     data = {
@@ -51,6 +56,7 @@ def test_handle_applicant_missing_candidate_id(monkeypatch, caplog):
     handle_applicant(data)
     assert "ID кандидата не найден" in caplog.text
 
+
 def test_handle_applicant_missing_vacancy_id(monkeypatch, caplog):
     data = {
         "meta": {"webhook_action": "STATUS"},
@@ -64,6 +70,7 @@ def test_handle_applicant_missing_vacancy_id(monkeypatch, caplog):
     }
     handle_applicant(data)
     assert "ID вакансии не найден" in caplog.text
+
 
 def test_handle_applicant_success(monkeypatch):
     class DummyTargetStage:
