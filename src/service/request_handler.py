@@ -34,4 +34,4 @@ def handle_request(request):
     if event_type == 'APPLICANT':
         handle_applicant(data)
 
-    return jsonify({"success": "Данные обработаны"}), 401
+    return jsonify({"success": "Данные обработаны"}), 200
