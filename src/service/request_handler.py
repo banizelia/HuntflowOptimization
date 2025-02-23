@@ -1,15 +1,8 @@
 import hashlib
 import hmac
 import os
-
 from flask import jsonify
-
 from src.service.applicant_handler import handle_applicant
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-
-if not SECRET_KEY:
-    raise ValueError("Ошибка: SECRET_KEY не найден в переменных окружения!")
 
 def handle_request(request):
     if request is None or request.get_json() is None:
@@ -19,8 +12,13 @@ def handle_request(request):
     if not signature_header:
         return jsonify({"error": "Отсутствует заголовок X-Huntflow-Signature"}), 401
 
+    secret_key = os.getenv('SECRET_KEY')
+
+    if not secret_key:
+        raise ValueError("Ошибка: SECRET_KEY не найден в переменных окружения!")
+
     computed_signature = hmac.new(
-        key=SECRET_KEY.encode('utf-8'),
+        key=secret_key.encode('utf-8'),
         msg=request.data,
         digestmod=hashlib.sha256
     ).hexdigest()
