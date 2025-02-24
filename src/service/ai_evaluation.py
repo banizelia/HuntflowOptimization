@@ -26,6 +26,29 @@ def evaluate_candidate(c_id: int, vacancy_id: int):
     return answer
 
 
+def get_formatted_full_resume(c_id):
+    applicant = get_applicant(c_id)
+    external_ids = [item for item in applicant.get('external', [])]
+
+    external_ids.sort(key=lambda x: x['updated'], reverse=True)
+
+    logger.debug("Найдено %d резюме для кандидата %s", len(external_ids), c_id)
+
+    # Берем только два последних резюме
+    external_ids = external_ids[:2]
+
+    full_resume = ''
+    for i, resume_data in enumerate(external_ids):
+        resume_id = resume_data['id']
+        logger.info("Обработка резюме %d с ID: %s для кандидата %s", i, resume_id, c_id)
+        resume = get_resume(c_id, resume_id)
+
+        logger.debug("Получено резюме %d для кандидата %s: %s", i, c_id, resume)
+        full_resume += f"Резюме {i} \n\n {format_resume(resume)} \n\n"
+
+    return full_resume
+
+
 def get_formatted_vacancy(vacancy_id):
     vac = get_vacancy_desc(vacancy_id)
     logger.info("Получено описание вакансии для ID: %s", vacancy_id)
@@ -34,16 +57,3 @@ def get_formatted_vacancy(vacancy_id):
     return vac
 
 
-def get_formatted_full_resume(c_id):
-    candidate = get_applicant(c_id)
-    external_ids = [item['id'] for item in candidate.get('external', [])]
-    logger.debug("Найдено %d резюме для кандидата %s", len(external_ids), c_id)
-    full_resume = ''
-    for i, resume_id in enumerate(external_ids):
-        logger.info("Обработка резюме %d с ID: %s для кандидата %s", i, resume_id, c_id)
-        resume = get_resume(c_id, resume_id)
-        logger.debug("Получено резюме %d для кандидата %s: %s", i, c_id, resume)
-        full_resume += f"Резюме {i} \n\n {format_resume(resume)} \n\n"
-    return full_resume
-
-# todo: разные промпты для офиса и it, разные промпты для людей в перми, вне перми и не рассматривающие переезд
