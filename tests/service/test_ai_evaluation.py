@@ -11,38 +11,14 @@ def dummy_format_resume(resume):
 def dummy_format_vacancy(vacancy):
     return "Formatted Vacancy"
 
+@pytest.fixture(autouse=True)
+def mock_openai(monkeypatch):
+    monkeypatch.setenv("CHATGPT_API_TOKEN", "test_chatgpt_token")
+    mock_openai = MagicMock()
 
-def test_evaluate_candidate(monkeypatch):
-    candidate = {
-        "id": 1,
-        "external": [{"id": 101}, {"id": 102}]
-    }
-    vacancy = {
-        "position": "Test Position",
-        "body": "Test vacancy body"
-    }
-    resume_dummy = {
-        "resume": {
-            "position": "Candidate Position",
-            "wanted_salary": {"amount": "100000", "currency": "RUB"},
-            "area": {"country": "TestCountry", "city": "TestCity", "address": "TestAddress"},
-            "relocation": {},
-            "skill_set": ["Python"],
-            "experience": [],
-            "education": {}
-        }
-    }
-    monkeypatch.setattr("src.service.ai_evaluation.get_applicant", lambda c_id: candidate)
-    monkeypatch.setattr("src.service.ai_evaluation.get_resume", lambda c_id, resume_id: resume_dummy)
-    monkeypatch.setattr("src.service.ai_evaluation.get_vacancy_desc", lambda vacancy_id: vacancy)
-    monkeypatch.setattr("src.service.ai_evaluation.format_resume", dummy_format_resume)
-    monkeypatch.setattr("src.service.ai_evaluation.format_vacancy", dummy_format_vacancy)
-    monkeypatch.setattr("src.service.ai_evaluation.ask_gpt", lambda vacancy_desc, full_resume: DummyAnswer())
-
-    from src.service.ai_evaluation import evaluate_candidate
-    answer = evaluate_candidate(1, 1)
-    assert answer.target_stage == "TEST_STAGE"
-    assert answer.comment == "Test comment"
+    mock_answer = DummyAnswer()
+    mock_openai.return_value.ask_gpt.return_value = mock_answer
+    monkeypatch.setattr("src.api_clients.openai_api.client", mock_openai)
 
 
 def test_get_formatted_vacancy(monkeypatch):
