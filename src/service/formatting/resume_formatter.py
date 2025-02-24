@@ -1,4 +1,5 @@
 import logging
+from types import NoneType
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +91,15 @@ def format_resume(resume: dict) -> str:
       — Опыт работы
       — Образование
     """
+
+    if resume is None:
+        return ""
+
     unified = resume.get('resume', {})
     logger.debug("Форматирование резюме в unified формате: %s", unified)
+
+    if unified is None:
+        return ""
 
     position = unified.get('position', '')
 
