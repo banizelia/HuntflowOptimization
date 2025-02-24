@@ -1,11 +1,13 @@
 import logging
+import os
 
-from src.api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
+from src.api_clients.huntflow_api import get_status_id_by_name, update_candidate_status, get_resume
 from src.service.ai_evaluation import evaluate_candidate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+from_stage_name = os.getenv("HUNTFLOW_FROM_STAGE")
 
 def handle_applicant(data):
     meta = data.get('meta', {})
@@ -16,8 +18,9 @@ def handle_applicant(data):
     event = data.get('event', {})
     applicant_log = event.get('applicant_log', {})
     status_name = applicant_log.get('status', {}).get('name')
-    if status_name != "Отклики":
-        logger.info("Статус кандидата: %s, не соответствует 'Отклики'.", status_name)
+
+    if from_stage_name.lower() != status_name.lower():
+        logger.info("Статус кандидата: %s, не соответствует '%s'.", status_name, from_stage_name)
         return
 
     applicant = event.get('applicant', {})
@@ -31,7 +34,7 @@ def handle_applicant(data):
         logger.error("ID вакансии не найден.")
         return
 
-    logger.info("Кандидат перешёл на этап 'Отклики'. ID кандидата: %s, ID вакансии: %s", candidate_id, vacancy_id)
+    logger.info("Кандидат перешёл на этап '%s'. ID кандидата: %s, ID вакансии: %s",from_stage_name, candidate_id, vacancy_id)
     candidate_evaluation_answer = evaluate_candidate(candidate_id, vacancy_id)
 
     target_stage_name = candidate_evaluation_answer.target_stage.value
