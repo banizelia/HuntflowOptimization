@@ -63,7 +63,8 @@ def test_get_formatted_vacancy(monkeypatch):
 
 def test_get_formatted_full_resume(monkeypatch):
     candidate = {
-        "external": [{"id": 101}, {"id": 102}]
+        "id": 1,
+        "external": [{"id": 101, "updated": "2023-01-01"}, {"id": 102, "updated": "2023-01-02"}]
     }
     resume_dummy = {
         "resume": {
