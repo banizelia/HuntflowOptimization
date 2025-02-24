@@ -43,6 +43,7 @@ def test_invalid_signature(client):
 def test_valid_request(client):
     payload = {
         "meta": {"webhook_action": "STATUS"},
+        "event": {"applicant_log": {"status": {"name": "Отклики"}}},
         "key": "value"
     }
 
