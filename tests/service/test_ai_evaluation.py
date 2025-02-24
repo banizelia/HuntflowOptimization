@@ -1,3 +1,7 @@
+import pytest
+from unittest.mock import MagicMock
+
+
 class DummyAnswer:
     def __init__(self):
         self.target_stage = "TEST_STAGE"
@@ -59,5 +63,4 @@ def test_get_formatted_full_resume(monkeypatch):
 
     from src.service.ai_evaluation import get_formatted_full_resume
     full_resume = get_formatted_full_resume(1)
-    # Ожидается, что "Formatted Resume" появится дважды, так как у кандидата 2 резюме.
     assert full_resume.count("Formatted Resume") == 2
