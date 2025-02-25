@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 
 import requests
 
-from src.config.env_updater import update_env_file
+from src.config.env_updater import update_and_reload_env
 
 HUNTFLOW_BASE_URL = os.getenv('HUNTFLOW_BASE_URL')
 HUNTFLOW_API_TOKEN = os.getenv('HUNTFLOW_API_TOKEN')
@@ -37,8 +37,8 @@ def refresh_access_token() -> Optional[str]:
         if new_access_token and new_refresh_token:
             session.headers['Authorization'] = f'Bearer {new_access_token}'
 
-            update_env_file('HUNTFLOW_API_TOKEN', new_access_token)
-            update_env_file('HUNTFLOW_REFRESH_TOKEN', new_refresh_token)
+            update_and_reload_env('HUNTFLOW_API_TOKEN', new_access_token)
+            update_and_reload_env('HUNTFLOW_REFRESH_TOKEN', new_refresh_token)
 
             logging.info('Tokens successfully refreshed.')
             return new_access_token

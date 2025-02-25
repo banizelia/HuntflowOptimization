@@ -22,7 +22,7 @@ def test_refresh_access_token_success(monkeypatch):
         "refresh_token": "new_refresh_token"
     })
     monkeypatch.setattr(huntflow_api.session, "post", lambda url, json, headers: dummy_response)
-    monkeypatch.setattr(huntflow_api, "update_env_file", lambda key, value: None)
+    monkeypatch.setattr(huntflow_api, "update_and_reload_env", lambda key, value: None)
 
     token = huntflow_api.refresh_access_token()
     assert token == "new_api_token"

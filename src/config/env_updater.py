@@ -1,22 +1,20 @@
 import logging
+import os
+from dotenv import load_dotenv, set_key
 from pathlib import Path
 
-from dotenv import set_key
 
-
-def update_env_file(key: str, value: str) -> None:
-    """
-    Обновляет или добавляет ключ `key` в .env (лежит рядом в той же папке config).
-    """
-    # Путь к .env внутри папки config:
+def update_and_reload_env(key: str, new_value: str):
     env_path = Path(__file__).resolve().parent / ".env"
 
-    # Проверяем наличие .env
     if not env_path.exists():
-        logging.error(f".env файл не найден по пути {env_path}")
+        logging.error(f".env not found: {env_path}")
         return
 
-    # set_key — функция из python-dotenv, которая сама корректно редактирует .env.
-    set_key(str(env_path), key, value)
+    set_key(str(env_path), key, new_value)
 
-    logging.info(f".env файл успешно обновлён: {key}={value}")
+    load_dotenv(dotenv_path=env_path)
+
+    updated_value = os.getenv(key)
+
+    return updated_value
