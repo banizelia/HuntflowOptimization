@@ -118,5 +118,5 @@ def test_handle_request_non_applicant_event(monkeypatch):
     resp_json = response.get_json()
 
     assert not called
-    assert resp_json.get("success") == "Данные обработаны"
-    assert status == 200
+    assert resp_json.get("error") == "Неизвестное событие"
+    assert status == 400
