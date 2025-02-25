@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: huntflow_optimization
+    ports:
+      - "7707:7707"
+    env_file:
+      - config/.env
+    volumes:
+      - .:/app
+    networks:
+      - huntflow_net
+
+networks:
+  huntflow_net:
+    driver: bridge

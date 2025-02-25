@@ -1,0 +1,8 @@
+.venv
+/.idea
+/tests
+.git
+*.pyc
+*.pyo
+*.pyd
+__pycache__
