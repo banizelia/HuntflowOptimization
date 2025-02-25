@@ -29,6 +29,9 @@ def handle_request(request):
     event_type = request.headers.get('x-huntflow-event')
 
     data = request.get_json()
+
+    if event_type == 'PING ':
+        return '', 200
     if event_type == 'APPLICANT':
         handle_applicant(data)
 
