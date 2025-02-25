@@ -1,8 +1,6 @@
 import logging
-from types import NoneType
 
 logger = logging.getLogger(__name__)
-
 
 def format_date(date_dict: dict) -> str:
     """
