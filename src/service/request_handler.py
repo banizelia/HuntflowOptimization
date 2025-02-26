@@ -33,7 +33,6 @@ def handle_request(request):
     if event_type == 'PING':
         return 'Ping received', 200
     elif event_type == 'APPLICANT':
-        handle_applicant(data)
-        return jsonify({"success": "Данные обработаны"}), 200
+        return handle_applicant(data)
     else:
         return jsonify({"error": "Неизвестное событие"}), 400

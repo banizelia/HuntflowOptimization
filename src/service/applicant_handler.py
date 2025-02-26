@@ -21,7 +21,7 @@ def handle_applicant(data):
 
     if from_stage_name.lower() != status_name.lower():
         logger.info("Статус кандидата: %s, не соответствует '%s'.", status_name, from_stage_name)
-        return
+        return jsonify({"error": f"Статус кандидата: {status_name}, не соответствует '{from_stage_name}'."}), 400
 
     applicant = event.get('applicant', {})
     candidate_id = applicant.get('id')
@@ -29,10 +29,10 @@ def handle_applicant(data):
 
     if not candidate_id:
         logger.error("ID кандидата не найден.")
-        return
+        return jsonify({"error": f"ID кандидата не найден."}), 400
     if not vacancy_id:
         logger.error("ID вакансии не найден.")
-        return
+        return jsonify({"error": f"ID вакансии не найден."}), 400
 
     logger.info("Кандидат перешёл на этап '%s'. ID кандидата: %s, ID вакансии: %s",from_stage_name, candidate_id, vacancy_id)
     candidate_evaluation_answer = evaluate_candidate(candidate_id, vacancy_id)
@@ -43,3 +43,5 @@ def handle_applicant(data):
     target_stage_id = get_status_id_by_name(target_stage_name)
 
     update_candidate_status(candidate_id, target_stage_id, vacancy_id, f"Оценка от ИИ: \n\n {comment}")
+
+    return jsonify({"success": "Данные обработаны"}), 200
