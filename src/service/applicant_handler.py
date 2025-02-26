@@ -12,13 +12,16 @@ logger = logging.getLogger(__name__)
 from_stage_name = os.getenv("HUNTFLOW_FROM_STAGE")
 
 def handle_applicant(data):
-    meta = data.get('meta', {})
-    if meta.get('webhook_action') != "STATUS":
-        logger.info("webhook_action = %s. Обработка только для 'STATUS'.", meta.get('webhook_action'))
-        return
-
     event = data.get('event', {})
+
     applicant_log = event.get('applicant_log', {})
+
+    action_type = applicant_log.get('applicant_log', {})
+
+    if action_type != "STATUS":
+        logger.info("action_type = %s. Обработка только для 'STATUS'.", action_type)
+        return jsonify({"error": f"action_type = {action_type}. Обработка только для 'STATUS'."}), 400
+
     status_name = applicant_log.get('status', {}).get('name')
 
     if from_stage_name.lower() != status_name.lower():
