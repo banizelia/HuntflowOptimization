@@ -1,66 +1,75 @@
-import pytest
-from unittest.mock import MagicMock
+from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
+from src.model.TargetStage import TargetStage
+from src.service import ai_evaluation
 
 
-class DummyAnswer:
-    def __init__(self):
-        self.target_stage = "TEST_STAGE"
-        self.comment = "Test comment"
-
-
-def dummy_format_resume(resume):
-    return "Formatted Resume"
-
-
-def dummy_format_vacancy(vacancy):
-    return "Formatted Vacancy"
-
-@pytest.fixture(autouse=True)
-def mock_openai(monkeypatch):
-    monkeypatch.setenv("CHATGPT_API_TOKEN", "test_chatgpt_token")
-    mock_openai = MagicMock()
-
-    mock_answer = DummyAnswer()
-    mock_openai.return_value.ask_gpt.return_value = mock_answer
-    monkeypatch.setattr("src.api_clients.openai_api.client", mock_openai)
-
-
-def test_get_formatted_vacancy(monkeypatch):
-    vacancy = {
-        "position": "Test Position",
-        "body": "Test body",
-        "money": "100",
-        "requirements": "",
-        "conditions": ""
+# Функция-замена для get_applicant, возвращает фиктивного кандидата с двумя резюме
+def dummy_get_applicant(c_id: int):
+    return {
+        "external": [
+            {"id": "resume1", "updated": 2},
+            {"id": "resume2", "updated": 1},
+        ]
     }
-    monkeypatch.setattr("src.service.ai_evaluation.get_vacancy_desc", lambda vid: vacancy)
-    monkeypatch.setattr("src.service.ai_evaluation.format_vacancy", lambda vac: "Formatted Vacancy")
-
-    from src.service.ai_evaluation import get_formatted_vacancy
-    formatted = get_formatted_vacancy(1)
-    assert formatted == "Formatted Vacancy"
 
 
-def test_get_formatted_full_resume(monkeypatch):
-    candidate = {
-        "id": 1,
-        "external": [{"id": 101, "updated": "2023-01-01"}, {"id": 102, "updated": "2023-01-02"}]
-    }
-    resume_dummy = {
-        "resume": {
-            "position": "Test",
-            "wanted_salary": {"amount": "100", "currency": "USD"},
-            "area": {"country": "TestCountry", "city": "TestCity", "address": ""},
-            "relocation": {},
-            "skill_set": [],
-            "experience": [],
-            "education": {}
-        }
-    }
-    monkeypatch.setattr("src.service.ai_evaluation.get_applicant", lambda cid: candidate)
-    monkeypatch.setattr("src.service.ai_evaluation.get_resume", lambda cid, rid: resume_dummy)
-    monkeypatch.setattr("src.service.ai_evaluation.format_resume", lambda res: "Formatted Resume")
+# Функция-замена для get_resume, возвращает фиктивное содержание резюме
+def dummy_get_resume(c_id: int, resume_id: str):
+    return {"dummy": f"resume content for {resume_id}"}
 
-    from src.service.ai_evaluation import get_formatted_full_resume
-    full_resume = get_formatted_full_resume(1)
-    assert full_resume.count("Formatted Resume") == 2
+
+# Функция-замена для форматирования резюме
+def dummy_format_resume(resume: dict) -> str:
+    # Формируем строку на основе переданного фиктивного резюме
+    return f"Formatted {resume.get('dummy')}"
+
+
+# Функция-замена для get_vacancy_desc, возвращает фиктивное описание вакансии
+def dummy_get_vacancy_desc(vacancy_id: int):
+    return {"dummy": f"vacancy content for {vacancy_id}"}
+
+
+# Функция-замена для форматирования вакансии
+def dummy_format_vacancy(vacancy: dict) -> str:
+    return f"Formatted {vacancy.get('dummy')}"
+
+
+# Функция-замена для ask_gpt, возвращает фиктивный ответ от GPT
+def dummy_ask_gpt(vacancy_description: str, full_resume: str) -> CandidateEvaluationAnswer:
+    return CandidateEvaluationAnswer(
+        target_stage=TargetStage.NEW,
+        comment="Test evaluation comment"
+    )
+
+
+def test_evaluate_candidate(monkeypatch):
+    # Подменяем зависимости в модуле ai_evaluation
+    monkeypatch.setattr(ai_evaluation, "get_applicant", dummy_get_applicant)
+    monkeypatch.setattr(ai_evaluation, "get_resume", dummy_get_resume)
+    monkeypatch.setattr(ai_evaluation, "get_vacancy_desc", dummy_get_vacancy_desc)
+    monkeypatch.setattr(ai_evaluation, "ask_gpt", dummy_ask_gpt)
+    monkeypatch.setattr(ai_evaluation, "format_resume", dummy_format_resume)
+    monkeypatch.setattr(ai_evaluation, "format_vacancy", dummy_format_vacancy)
+
+    candidate_id = 123
+    vacancy_id = 456
+
+    # Вызываем тестируемую функцию
+    result = ai_evaluation.evaluate_candidate(candidate_id, vacancy_id)
+
+    # Проверяем, что результат соответствует фиктивному ответу от ask_gpt
+    assert result.target_stage == TargetStage.NEW
+    assert result.comment == "Test evaluation comment"
+
+    # Дополнительно можно проверить корректность формирования полного резюме
+    expected_resume = (
+        "Резюме 0 \n\n Formatted resume content for resume1 \n\n"
+        "Резюме 1 \n\n Formatted resume content for resume2 \n\n"
+    )
+    full_resume = ai_evaluation.get_formatted_full_resume(candidate_id)
+    assert expected_resume.strip() == full_resume.strip()
+
+    # Проверяем форматирование описания вакансии
+    expected_vacancy = "Formatted vacancy content for 456"
+    vacancy_description = ai_evaluation.get_formatted_vacancy(vacancy_id)
+    assert expected_vacancy == vacancy_description

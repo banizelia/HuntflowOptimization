@@ -3,69 +3,154 @@ import hmac
 import json
 import os
 
+import pytest
+from flask import jsonify
 
-def test_no_data(client):
-    response = client.post('/huntflow/webhook/applicant', data='null', content_type='application/json')
-    assert response.status_code == 400
-    data = response.get_json()
-    assert "Отсутствуют данные" in data.get("error", "")
+from src.app import app
 
 
-def test_missing_signature(client):
-    payload = {"key": "value"}
-    response = client.post(
-        '/huntflow/webhook/applicant',
-        json=payload
-    )
-    assert response.status_code == 401
-    data = response.get_json()
-    assert "Отсутствует заголовок X-Huntflow-Signature" in data.get("error", "")
+def compute_signature(secret_key: str, data: bytes) -> str:
+    return hmac.new(secret_key.encode('utf-8'), data, digestmod=hashlib.sha256).hexdigest()
 
 
-def test_invalid_signature(client):
-    payload = {"key": "value"}
-    json_data = json.dumps(payload).encode('utf-8')
-    headers = {
-        "X-Huntflow-Signature": "invalid_signature",
-        "x-huntflow-event": "APPLICANT"
-    }
-    response = client.post(
-        '/huntflow/webhook/applicant',
-        data=json_data,
-        headers=headers,
-        content_type='application/json'
-    )
-    assert response.status_code == 401
-    data = response.get_json()
-    assert "Неверная подпись" in data.get("error", "")
+@pytest.fixture
+def flask_app_context():
+    with app.app_context():
+        yield
 
 
-def test_valid_request(client):
-    payload = {
-        "meta": {"webhook_action": "STATUS"},
-        "event": {"applicant_log": {"status": {"name": "Отклики"}}},
-        "key": "value"
-    }
+def test_new_action_no_json(monkeypatch, flask_app_context):
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    with app.test_client() as client:
+        response = client.post("/huntflow/webhook/applicant", data="null", content_type="application/json")
+        assert response.status_code == 400
+        data = response.get_json(force=True)
+        assert "Отсутствуют данные" in data["error"]
 
-    json_str = json.dumps(payload, separators=(',', ':'))
-    json_data = json_str.encode('utf-8')
-    secret = os.getenv("SECRET_KEY")
 
-    valid_signature = hmac.new(
-        secret.encode('utf-8'),
-        json_data,
-        digestmod=hashlib.sha256
-    ).hexdigest()
-    headers = {
-        "X-Huntflow-Signature": valid_signature,
-        "x-huntflow-event": "APPLICANT"
-    }
-    response = client.post(
-        '/huntflow/webhook/applicant',
-        data=json_data,
-        headers=headers,
-        content_type='application/json'
-    )
-    assert response.status_code == 200
-    data = response.get_json()
-    assert data.get("success") == "Данные обработаны"
+def test_new_action_missing_signature(monkeypatch, flask_app_context):
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    payload = json.dumps({"key": "value"})
+    with app.test_client() as client:
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=payload,
+            content_type="application/json"
+        )
+        assert response.status_code == 401
+        data = response.get_json()
+        assert "Отсутствует заголовок X-Huntflow-Signature" in data["error"]
+
+
+def test_new_action_invalid_signature(monkeypatch, flask_app_context):
+    """
+    Если переданная подпись неверна, эндпоинт должен вернуть 401 с сообщением "Неверная подпись".
+    """
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    payload = json.dumps({"key": "value"})
+    data_bytes = payload.encode('utf-8')
+    correct_signature = compute_signature(secret_key, data_bytes)
+    # Меняем последний символ, чтобы подпись была неверной
+    invalid_signature = correct_signature[:-1] + ("0" if correct_signature[-1] != "0" else "1")
+    with app.test_client() as client:
+        headers = {
+            "X-Huntflow-Signature": invalid_signature,
+            "x-huntflow-event": "PING"
+        }
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=payload,
+            content_type="application/json",
+            headers=headers
+        )
+        assert response.status_code == 401
+        data = response.get_json()
+        assert "Неверная подпись" in data["error"]
+
+
+def test_new_action_ping_event(monkeypatch, flask_app_context):
+    """
+    Если заголовок x-huntflow-event равен "PING", эндпоинт должен вернуть строку "Ping received" со статусом 200.
+    """
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    payload = json.dumps({"key": "value"})
+    data_bytes = payload.encode('utf-8')
+    signature = compute_signature(secret_key, data_bytes)
+    with app.test_client() as client:
+        headers = {
+            "X-Huntflow-Signature": signature,
+            "x-huntflow-event": "PING"
+        }
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=payload,
+            content_type="application/json",
+            headers=headers
+        )
+        assert response.status_code == 200
+        # Для PING возвращается простая строка, а не JSON
+        assert response.data.decode("utf-8") == "Ping received"
+
+
+def test_new_action_applicant_event(monkeypatch, flask_app_context):
+    """
+    Если заголовок x-huntflow-event равен "APPLICANT", вызывается функция handle_request,
+    которая внутри вызывает handle_applicant. Здесь мы подменяем handle_applicant, чтобы вернуть
+    фиктивный ответ, и проверяем, что эндпоинт возвращает его.
+    """
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    payload = json.dumps({"key": "value"})
+    data_bytes = payload.encode('utf-8')
+    signature = compute_signature(secret_key, data_bytes)
+
+    # Фиктивная реализация handle_applicant, возвращающая JSON-ответ
+    def dummy_handle_applicant(request_json):
+        return jsonify({"message": "Processed applicant"}), 200
+
+    # Подменяем handle_applicant в модуле request_handler, который импортирован в app
+    import src.service.request_handler as req_handler
+    monkeypatch.setattr(req_handler, "handle_applicant", dummy_handle_applicant)
+
+    with app.test_client() as client:
+        headers = {
+            "X-Huntflow-Signature": signature,
+            "x-huntflow-event": "APPLICANT"
+        }
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=payload,
+            content_type="application/json",
+            headers=headers
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data.get("message") == "Processed applicant"
+
+
+def test_new_action_unknown_event(monkeypatch, flask_app_context):
+    """
+    Если значение заголовка x-huntflow-event неизвестно (не PING и не APPLICANT),
+    эндпоинт должен вернуть ошибку 400 с сообщением "Неизвестное событие".
+    """
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    payload = json.dumps({"key": "value"})
+    data_bytes = payload.encode('utf-8')
+    signature = compute_signature(secret_key, data_bytes)
+    with app.test_client() as client:
+        headers = {
+            "X-Huntflow-Signature": signature,
+            "x-huntflow-event": "UNKNOWN"
+        }
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=payload,
+            content_type="application/json",
+            headers=headers
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert "Неизвестное событие" in data["error"]
