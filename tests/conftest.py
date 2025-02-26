@@ -10,8 +10,6 @@ def set_test_env(monkeypatch):
     monkeypatch.setenv("HUNTFLOW_API_TOKEN", "test_api_token")
     monkeypatch.setenv("HUNTFLOW_REFRESH_TOKEN", "test_refresh_token")
     monkeypatch.setenv("HUNTFLOW_ACCOUNT_ID", "12345")
-    monkeypatch.setenv("CHATGPT_API_TOKEN", "test_chatgpt_token")
-    monkeypatch.setenv("OPENAI_API_KEY", "dummy_test_token")
     monkeypatch.setenv("HUNTFLOW_FROM_STAGE", "Отклики")
     yield
 
