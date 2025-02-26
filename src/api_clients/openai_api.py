@@ -9,15 +9,21 @@ from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-CHATGPT_API_TOKEN = os.getenv('CHATGPT_API_TOKEN')
+_client = None
 
-if CHATGPT_API_TOKEN:
-    logger.debug("Получен API токен для ChatGPT")
-else:
-    logger.error("API токен для ChatGPT не найден!")
 
-client = OpenAI(api_key=CHATGPT_API_TOKEN)
-logger.info("Клиент OpenAI успешно создан")
+def get_client():
+    global _client
+    if _client is None:
+        token = os.getenv('CHATGPT_API_TOKEN')
+        if token:
+            logger.debug("Получен API токен для ChatGPT")
+            _client = OpenAI(api_key=token)
+            logger.info("Клиент OpenAI успешно создан")
+        else:
+            logger.error("API токен для ChatGPT не найден!")
+            _client = None
+    return _client
 
 
 def ask_gpt(vacancy_description: str, candidate_resume: str) -> CandidateEvaluationAnswer:
@@ -59,7 +65,7 @@ def ask_gpt(vacancy_description: str, candidate_resume: str) -> CandidateEvaluat
         f"Резюме кандидата:\n{candidate_resume}"
     )
 
-    completion = client.beta.chat.completions.parse(
+    completion = get_client().beta.chat.completions.parse(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": prompt_system},
