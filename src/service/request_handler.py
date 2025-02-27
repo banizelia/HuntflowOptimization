@@ -5,9 +5,6 @@ from flask import jsonify
 from src.service.applicant_handler import handle_applicant
 
 def handle_request(request):
-    if request is None or request.get_json() is None:
-        return jsonify({"error": "Отсутствуют данные"}), 400
-
     signature_header = request.headers.get('X-Huntflow-Signature')
     if not signature_header:
         return jsonify({"error": "Отсутствует заголовок X-Huntflow-Signature"}), 401
@@ -25,6 +22,9 @@ def handle_request(request):
 
     if not hmac.compare_digest(computed_signature, signature_header):
         return jsonify({"error": "Неверная подпись"}), 401
+
+    if request is None or request.get_json() is None:
+        return jsonify({"error": "Отсутствуют данные"}), 400
 
     event_type = request.headers.get('x-huntflow-event')
 

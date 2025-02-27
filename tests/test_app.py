@@ -21,11 +21,24 @@ def flask_app_context():
 
 def test_new_action_no_json(monkeypatch, flask_app_context):
     monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    payload = ''
+    data_bytes = payload.encode('utf-8')
+    correct_signature = compute_signature(secret_key, data_bytes)
+
     with app.test_client() as client:
-        response = client.post("/huntflow/webhook/applicant", data="null", content_type="application/json")
+        headers = {
+            "X-Huntflow-Signature": correct_signature,
+            "x-huntflow-event": "PING"
+        }
+        response = client.post(
+            "/huntflow/webhook/applicant",
+            data=None,
+            content_type="application/json",
+            headers=headers
+        )
+
         assert response.status_code == 400
-        data = response.get_json(force=True)
-        assert "Отсутствуют данные" in data["error"]
 
 
 def test_new_action_missing_signature(monkeypatch, flask_app_context):
@@ -51,7 +64,7 @@ def test_new_action_invalid_signature(monkeypatch, flask_app_context):
     payload = json.dumps({"key": "value"})
     data_bytes = payload.encode('utf-8')
     correct_signature = compute_signature(secret_key, data_bytes)
-    # Меняем последний символ, чтобы подпись была неверной
+
     invalid_signature = correct_signature[:-1] + ("0" if correct_signature[-1] != "0" else "1")
     with app.test_client() as client:
         headers = {

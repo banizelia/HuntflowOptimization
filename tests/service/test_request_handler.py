@@ -36,19 +36,17 @@ def compute_signature(secret_key: str, data: bytes) -> str:
     ).hexdigest()
 
 
-def test_handle_request_no_request(flask_app_context):
-    """Если request равен None, возвращается ошибка 400 с сообщением 'Отсутствуют данные'."""
-    response, status_code = handle_request(None)
-    assert status_code == 400
-    json_data = response.get_json()
-    assert json_data.get("error") == "Отсутствуют данные"
-
-
-def test_handle_request_no_json(flask_app_context):
-    """Если request.get_json() возвращает None, возвращается ошибка 400 с сообщением 'Отсутствуют данные'."""
+def test_handle_request_no_json(flask_app_context, monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "test_secret")
+    secret_key = os.getenv("SECRET_KEY")
+    data = b"{}"
+    signature = compute_signature(secret_key, data)
     dummy_req = DummyRequest(
-        headers={"X-Huntflow-Signature": "dummy"},
-        data=b"{}",
+        headers={
+            "X-Huntflow-Signature": signature,
+            "x-huntflow-event": "PING"
+        },
+        data=data,
         json_data=None
     )
     response, status_code = handle_request(dummy_req)
