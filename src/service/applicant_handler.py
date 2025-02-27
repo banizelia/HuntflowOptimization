@@ -16,7 +16,7 @@ def handle_applicant(data):
 
     applicant_log = event.get('applicant_log', {})
 
-    action_type = applicant_log.get('applicant_log', {})
+    action_type = applicant_log.get('type', {})
 
     if action_type != "STATUS":
         logger.info("action_type = %s. Обработка только для 'STATUS'.", action_type)

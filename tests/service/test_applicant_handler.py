@@ -44,7 +44,7 @@ def test_handle_applicant_invalid_action_type(monkeypatch, flask_app_context):
     data = {
         "event": {
             "applicant_log": {
-                "applicant_log": "ADD",  # неверный тип действия
+                "type": "ADD",
             }
         }
     }
@@ -62,8 +62,8 @@ def test_handle_applicant_status_mismatch(monkeypatch, flask_app_context):
     data = {
         "event": {
             "applicant_log": {
-                "applicant_log": "STATUS",
                 "status": {"name": "Новый"},  # не совпадает с "Отклики"
+                "type": "STATUS",
             }
         }
     }
@@ -81,7 +81,7 @@ def test_handle_applicant_missing_candidate_id(monkeypatch, flask_app_context):
     data = {
         "event": {
             "applicant_log": {
-                "applicant_log": "STATUS",
+                "type": "STATUS",
                 "status": {"name": "Отклики"},
                 "vacancy": {"id": 123}
             },
@@ -102,7 +102,7 @@ def test_handle_applicant_missing_vacancy_id(monkeypatch, flask_app_context):
     data = {
         "event": {
             "applicant_log": {
-                "applicant_log": "STATUS",
+                "type": "STATUS",
                 "status": {"name": "Отклики"},
                 "vacancy": {}  # отсутствует ID вакансии
             },
@@ -128,7 +128,7 @@ def test_handle_applicant_success(monkeypatch, flask_app_context):
     data = {
         "event": {
             "applicant_log": {
-                "applicant_log": "STATUS",
+                "type": "STATUS",
                 "status": {"name": "Отклики"},
                 "vacancy": {"id": 123}
             },
