@@ -21,7 +21,6 @@ def dummy_update_candidate_status(candidate_id, target_status_id, vacancy_id, co
     return {"dummy": True}
 
 
-# Фикстура для создания контекста приложения Flask
 @pytest.fixture
 def flask_app_context():
     app = Flask(__name__)
@@ -29,7 +28,6 @@ def flask_app_context():
         yield
 
 
-# Вспомогательная функция для установки переменной окружения и обновления модуля
 def set_from_stage(monkeypatch, value="Отклики"):
     monkeypatch.setenv("HUNTFLOW_FROM_STAGE", value)
     # Обновляем значение, сохранённое в модуле, чтобы не было None
@@ -37,9 +35,6 @@ def set_from_stage(monkeypatch, value="Отклики"):
 
 
 def test_handle_applicant_invalid_action_type(monkeypatch, flask_app_context):
-    """
-    Если поле action_type не равно "STATUS", функция должна вернуть ошибку 400.
-    """
     set_from_stage(monkeypatch)
     data = {
         "event": {
@@ -55,15 +50,12 @@ def test_handle_applicant_invalid_action_type(monkeypatch, flask_app_context):
 
 
 def test_handle_applicant_status_mismatch(monkeypatch, flask_app_context):
-    """
-    Если статус кандидата не соответствует значению HUNTFLOW_FROM_STAGE, функция возвращает ошибку 400.
-    """
     set_from_stage(monkeypatch)
     data = {
         "event": {
             "applicant_log": {
-                "status": {"name": "Новый"},  # не совпадает с "Отклики"
                 "type": "STATUS",
+                "status": {"name": "Новый"},
             }
         }
     }
@@ -74,9 +66,6 @@ def test_handle_applicant_status_mismatch(monkeypatch, flask_app_context):
 
 
 def test_handle_applicant_missing_candidate_id(monkeypatch, flask_app_context):
-    """
-    Если в данных отсутствует ID кандидата, функция должна вернуть ошибку 400.
-    """
     set_from_stage(monkeypatch)
     data = {
         "event": {
@@ -85,7 +74,7 @@ def test_handle_applicant_missing_candidate_id(monkeypatch, flask_app_context):
                 "status": {"name": "Отклики"},
                 "vacancy": {"id": 123}
             },
-            "applicant": {}  # отсутствует ID кандидата
+            "applicant": {}
         }
     }
     response, status_code = applicant_handler.handle_applicant(data)
@@ -95,9 +84,6 @@ def test_handle_applicant_missing_candidate_id(monkeypatch, flask_app_context):
 
 
 def test_handle_applicant_missing_vacancy_id(monkeypatch, flask_app_context):
-    """
-    Если в данных отсутствует ID вакансии, функция должна вернуть ошибку 400.
-    """
     set_from_stage(monkeypatch)
     data = {
         "event": {
@@ -116,9 +102,6 @@ def test_handle_applicant_missing_vacancy_id(monkeypatch, flask_app_context):
 
 
 def test_handle_applicant_success(monkeypatch, flask_app_context):
-    """
-    При корректных входных данных функция должна вызвать оценку кандидата и вернуть успешный ответ.
-    """
     set_from_stage(monkeypatch)
     # Подменяем зависимости: evaluate_candidate, get_status_id_by_name, update_candidate_status
     monkeypatch.setattr(applicant_handler, "evaluate_candidate", dummy_evaluate_candidate)
@@ -142,10 +125,6 @@ def test_handle_applicant_success(monkeypatch, flask_app_context):
 
 
 def test_handle_applicant_missing_event(monkeypatch, flask_app_context):
-    """
-    Если в переданных данных отсутствует ключ 'event', функция должна корректно обработать ситуацию.
-    В данном случае action_type будет {} и не равен "STATUS".
-    """
     set_from_stage(monkeypatch)
     data = {}  # отсутствует 'event'
     response, status_code = applicant_handler.handle_applicant(data)
