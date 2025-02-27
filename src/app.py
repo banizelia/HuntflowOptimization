@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from src.service.request_handler import handle_request
 app = Flask(__name__)
 swagger = Swagger(app)
 
+APP_PORT = os.getenv("APP_PORT")
 
 @app.route('/huntflow/webhook/applicant', methods=['POST'])
 def new_action():
@@ -67,4 +69,4 @@ def new_action():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", port=APP_PORT)
