@@ -87,7 +87,7 @@ def test_ask_gpt(monkeypatch):
 
     # Создаем фиктивный ответ, который должен вернуть ask_gpt
     dummy_answer = CandidateEvaluationAnswer(
-        target_stage=TargetStage.PRIORITY,
+        target_stage=TargetStage.NEW,
         comment="Good candidate"
     )
 
@@ -105,5 +105,5 @@ def test_ask_gpt(monkeypatch):
 
     result = ask_gpt(vacancy_description, candidate_resume)
     assert isinstance(result, CandidateEvaluationAnswer)
-    assert result.target_stage == TargetStage.PRIORITY
+    assert result.target_stage == TargetStage.NEW
     assert result.comment == "Good candidate"
