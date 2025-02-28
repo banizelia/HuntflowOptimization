@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate_candidate(applicant_id: int, vacancy_id: int):
+    full_resume = get_formatted_full_resume(applicant_id)
+
+    if "не готов к переезду" in full_resume:
+        answer = CandidateEvaluationAnswer(
+            comment="Не готов к переезду в Пермь",
+            target_stage=TargetStage.RESERVE
+        )
+        return answer
+
     vacancy_description = get_formatted_vacancy(vacancy_id)
 
     answer = ask_gpt(vacancy_description, full_resume)
