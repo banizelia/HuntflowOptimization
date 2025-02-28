@@ -28,7 +28,6 @@ def handle_applicant(data):
         logger.info("Статус кандидата: %s, не соответствует '%s'.", status_name, from_stage_name)
         return jsonify({"error": f"Статус кандидата: {status_name}, не соответствует '{from_stage_name}'."}), 400
 
-    candidate_id = applicant.get('id')
     vacancy_id = applicant_log.get('vacancy', {}).get('id')
 
     if not applicant_id:
