@@ -1,10 +1,9 @@
 import logging
 import os
-from datetime import date
 
 from openai import OpenAI
 
-from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
+from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

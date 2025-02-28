@@ -3,13 +3,14 @@ import os
 import pytest
 from flask import Flask
 
+from src.model.target_stage import TargetStage
+from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
 from src.service import applicant_handler
 
 
 # Фиктивные реализации зависимостей для успешного сценария
 def dummy_evaluate_candidate(candidate_id, vacancy_id):
-    from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
-    from src.model.TargetStage import TargetStage
+
     return CandidateEvaluationAnswer(target_stage=TargetStage.NEW, comment="Test comment")
 
 

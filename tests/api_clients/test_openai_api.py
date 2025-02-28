@@ -3,8 +3,8 @@ import logging
 import pytest
 
 from src.api_clients.openai_api import get_client, ask_gpt
-from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
-from src.model.TargetStage import TargetStage
+from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
+from src.model.target_stage import TargetStage
 
 
 # Определяем вспомогательные классы для имитации ответа от OpenAI

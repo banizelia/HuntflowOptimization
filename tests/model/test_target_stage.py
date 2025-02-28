@@ -1,6 +1,6 @@
 import pytest
 
-from src.model.TargetStage import TargetStage
+from src.model.target_stage import TargetStage
 
 
 def test_target_stage_enum_values():

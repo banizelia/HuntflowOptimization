@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from src.model.CandidateEvaluationAnswer import CandidateEvaluationAnswer
-from src.model.TargetStage import TargetStage
+from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
+from src.model.target_stage import TargetStage
 
 
 def test_valid_candidate_evaluation_answer_with_enum():

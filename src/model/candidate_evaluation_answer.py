@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from src.model.TargetStage import TargetStage
+from src.model.target_stage import TargetStage
 
 
 class CandidateEvaluationAnswer(BaseModel):
