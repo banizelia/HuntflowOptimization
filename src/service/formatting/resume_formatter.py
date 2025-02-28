@@ -3,12 +3,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 def format_date(date_dict: dict) -> str:
-    """
-    Форматирует дату из словаря с полями year, month, day и precision.
-    Если точность указана как 'year', выводится только год,
-    если 'month' – год и месяц, если 'day' – полная дата.
-    Если входные данные отсутствуют – возвращается "Не указана".
-    """
     if not date_dict:
         return "Не указана"
     year = date_dict.get('year')
@@ -31,14 +25,6 @@ def format_date(date_dict: dict) -> str:
 
 
 def format_experience(exp_list: list) -> str:
-    """
-    Форматирует список опытов работы из единого формата.
-    Ожидается, что каждый опыт содержит:
-      - date_from и date_to (словарь с датой)
-      - company
-      - position
-      - description
-    """
     result = ""
     for exp in exp_list:
         start = format_date(exp.get('date_from', {}))
@@ -55,15 +41,6 @@ def format_experience(exp_list: list) -> str:
 
 
 def format_education(education: dict) -> str:
-    """
-    Форматирует раздел образования из единого формата.
-    В данном примере берется список высших учебных заведений (ключ "higher").
-    Каждый элемент содержит:
-      - name (название ВУЗа)
-      - faculty (факультет)
-      - date_from и date_to (даты начала и окончания)
-    Если требуется – можно добавить и другие типы образования.
-    """
     result = ""
     higher = education.get('higher', [])
     for edu in higher:
@@ -76,20 +53,6 @@ def format_education(education: dict) -> str:
 
 
 def format_resume(resume: dict) -> str:
-    """
-    Форматирует резюме, используя данные из единого формата, содержащегося
-    в поле 'resume' ответа API.
-
-    Извлекаются такие разделы:
-      — Личная информация (ФИО)
-      — Позиция
-      — Местоположение (из поля area)
-      — Релокация
-      — Навыки
-      — Опыт работы
-      — Образование
-    """
-
     if resume is None:
         return ""
 
