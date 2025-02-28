@@ -13,14 +13,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def evaluate_candidate(c_id: int, vacancy_id: int):
-    full_resume = get_formatted_full_resume(c_id)
+def evaluate_candidate(applicant_id: int, vacancy_id: int):
     vacancy_description = get_formatted_vacancy(vacancy_id)
 
-    logger.info("Отправка запроса в GPT для кандидата %s", c_id)
     answer = ask_gpt(vacancy_description, full_resume)
+    logger.info("Отправка запроса в GPT для кандидата %s", applicant_id)
 
-    logger.info("Получен ответ GPT для кандидата %s", c_id)
+    logger.info("Получен ответ GPT для кандидата %s", applicant_id)
     logger.debug("Ответ GPT: target_stage: %s, comment: %s", answer.target_stage, answer.comment)
 
     return answer
