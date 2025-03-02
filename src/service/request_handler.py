@@ -1,38 +1,38 @@
 import hashlib
 import hmac
 import os
-from flask import jsonify
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from src.service.applicant_handler import handle_applicant
 
-def handle_request(request):
+async def handle_request(request: Request):
     signature_header = request.headers.get('X-Huntflow-Signature')
     if not signature_header:
-        return jsonify({"error": "Отсутствует заголовок X-Huntflow-Signature"}), 401
+        return JSONResponse(content={"error": "Отсутствует заголовок X-Huntflow-Signature"}, status_code=401)
 
     secret_key = os.getenv('SECRET_KEY')
-
     if not secret_key:
         raise ValueError("Ошибка: SECRET_KEY не найден в переменных окружения!")
 
+    body_bytes = await request.body()
     computed_signature = hmac.new(
         key=secret_key.encode('utf-8'),
-        msg=request.data,
+        msg=body_bytes,
         digestmod=hashlib.sha256
     ).hexdigest()
 
     if not hmac.compare_digest(computed_signature, signature_header):
-        return jsonify({"error": "Неверная подпись"}), 401
+        return JSONResponse(content={"error": "Неверная подпись"}, status_code=401)
 
-    if request is None or request.get_json() is None:
-        return jsonify({"error": "Отсутствуют данные"}), 400
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse(content={"error": "Отсутствуют данные или неверный формат"}, status_code=400)
 
     event_type = request.headers.get('x-huntflow-event')
-
-    data = request.get_json()
-
     if event_type == 'PING':
-        return 'Ping received', 200
+        return JSONResponse(content="Ping received", status_code=200)
     elif event_type == 'APPLICANT':
-        return handle_applicant(data)
+        return await handle_applicant(data)
     else:
-        return jsonify({"error": "Неизвестное событие"}), 400
+        return JSONResponse(content={"error": "Неизвестное событие"}, status_code=400)

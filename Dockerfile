@@ -10,4 +10,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 EXPOSE 7707
 
-CMD ["python", "src/app.py"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "7707"]
