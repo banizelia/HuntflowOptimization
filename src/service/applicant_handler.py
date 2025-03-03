@@ -13,10 +13,10 @@ async def handle_applicant(data: dict):
     event = data.get('event', {})
     applicant_log = event.get('applicant_log', {})
 
-    action_type = applicant_log.get('type', {})
-    if action_type != "STATUS":
-        logger.info("action_type = %s. Обработка только для 'STATUS'.", action_type)
-        return JSONResponse(content={"error": f"action_type = {action_type}. Обработка только для 'STATUS'."}, status_code=400)
+    applicant_log_type = applicant_log.get('type', {})
+    if applicant_log_type != "STATUS":
+        logger.info("applicant_log_type = %s. Обработка только для 'STATUS'.", applicant_log_type)
+        return JSONResponse(content={"error": f"applicant_log_type = {applicant_log_type}. Обработка только для 'STATUS'."}, status_code=400)
 
     status_name = applicant_log.get('status', {}).get('name')
     if from_stage_name.lower() != status_name.lower():

@@ -52,43 +52,41 @@ def format_education(education: dict) -> str:
     return result
 
 
-def format_resume(unified: dict) -> str:
-    if unified is None:
+def format_resume(unified_resume: dict) -> str:
+    if unified_resume is None:
         return ""
 
-    position = unified.get('position', '')
+    position = unified_resume.get('position', '')
 
     # Зарплатные ожидания
-    wanted_salary = unified.get('wanted_salary', {})
+    wanted_salary = unified_resume.get('wanted_salary', {})
 
     salary_amount = wanted_salary.get('amount', '')
     salary_currency = wanted_salary.get('currency', '')
 
-
-
     # Навыки (skill_set — список строк)
-    skills = unified.get('skill_set', [])
+    skills = unified_resume.get('skill_set', [])
 
     # Опыт работы
-    exp_list = unified.get('experience', [])
+    exp_list = unified_resume.get('experience', [])
     experience_str = format_experience(exp_list)
 
     # Образование (берем раздел higher)
-    education = unified.get('education', {})
+    education = unified_resume.get('education', {})
     education_str = format_education(education)
 
     formatted_resume = f"""
-Позиция: {position}
-Зарплатные ожидание: {salary_amount} + {salary_currency}
+        Позиция: {position}
+        Зарплатные ожидание: {salary_amount} + {salary_currency}
 
-Навыки:
-{", ".join(skills)}
+        Навыки: {", ".join(skills)}
 
-Опыт работы:
-{experience_str}
+        Опыт работы: 
+        {experience_str}
 
-Образование:
-{education_str}
-"""
+        Образование:
+        {education_str}
+    """
+
     logger.debug("Отформатированное резюме (Unified): %s", formatted_resume)
     return formatted_resume

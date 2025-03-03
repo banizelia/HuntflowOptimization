@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def evaluate_candidate(applicant_id: int, vacancy_id: int):
+def evaluate_candidate(applicant_id: int, vacancy_id: int) -> CandidateEvaluationAnswer:
     applicant = get_applicant(applicant_id)
     external_ids = applicant.get('external', [])
 
@@ -30,10 +30,10 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int):
     last_resume_id = external_ids[0]['id']
 
     resume = get_resume(applicant_id, last_resume_id)
-    unified = resume.get('resume', {})
+    unified_resume = resume.get('resume', {})
 
-    city = unified.get('area', {}).get('city').get('name', '')
-    relocation_type = unified.get('relocation', {}).get('type').get('name', '')
+    city = unified_resume.get('area', {}).get('city').get('name', '')
+    relocation_type = unified_resume.get('relocation', {}).get('type').get('name', '')
 
     phrases = ["не готов к переезду", "не могу переехать", "cannot move"]
 
@@ -43,7 +43,7 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int):
             target_stage=TargetStage.RESERVE
         )
 
-    full_resume = format_resume(unified=unified)
+    full_resume = format_resume(unified_resume=unified_resume)
 
     vacancy_description = get_formatted_vacancy(vacancy_id)
 
