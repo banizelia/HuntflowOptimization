@@ -81,10 +81,6 @@ def format_resume(unified: dict) -> str:
 Позиция: {position}
 Зарплатные ожидание: {salary_amount} + {salary_currency}
 
-Местоположение: {city}, {country}, {address}
-Готовность к переезду: {relocation_type}
-Куда готов переехать: {relocation_destinations}
-
 Навыки:
 {", ".join(skills)}
 
