@@ -1,101 +1,112 @@
+from src.service.ai_evaluation import evaluate_candidate, get_formatted_vacancy
 from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
 from src.model.target_stage import TargetStage
-from src.service import ai_evaluation
 
-# Функция-замена для get_applicant, возвращает фиктивного кандидата с двумя резюме
-def dummy_get_applicant(applicant_id: int):
+
+# Фиктивные реализации для зависимостей
+
+# 1. Сценарий: кандидат без резюме (external пустой)
+def dummy_get_applicant_no_resume(applicant_id: int):
+    return {"external": []}
+
+
+# 2. Сценарий: кандидат имеет резюме, но не готов к переезду
+def dummy_get_applicant_with_resume(applicant_id: int):
+    return {"external": [{"id": "resume1", "updated": 100}]}
+
+
+def dummy_get_resume_not_ready(applicant_id: int, resume_id: str):
+    # Резюме с информацией, что кандидат "не готов к переезду"
     return {
-        "external": [
-            {"id": "resume1", "updated": 2},
-            {"id": "resume2", "updated": 1},
-        ]
+        "resume": {
+            "area": {"city": {"name": "Москва"}},
+            "relocation": {"type": {"name": "Не готов к переезду"}},
+            "position": "Developer",
+            "wanted_salary": {"amount": "100000", "currency": "RUB"},
+            "skill_set": ["Python"],
+            "experience": [],
+            "education": {}
+        }
     }
 
-# Функция-замена для get_resume, возвращает фиктивное содержание резюме
-def dummy_get_resume(applicant_id: int, resume_id: str):
-    return {"dummy": f"resume content for {resume_id}"}
+
+# 3. Сценарий: кандидат готов к переезду, поэтому оценка передается GPT
+def dummy_get_resume_ready(applicant_id: int, resume_id: str):
+    return {
+        "resume": {
+            "area": {"city": {"name": "Пермь"}},  # Город, в котором переезд разрешен
+            "relocation": {"type": {"name": "Готов к переезду"}},
+            "position": "Developer",
+            "wanted_salary": {"amount": "100000", "currency": "RUB"},
+            "skill_set": ["Python"],
+            "experience": [],
+            "education": {}
+        }
+    }
 
 
-
-def dummy_format_resume(resume: dict) -> str:
-    return f"Formatted {resume.get('dummy')}"
-
-
-# Функция-замена для форматирования резюме, добавляющая фразу "не готов к переезду"
-def dummy_format_resume_with_not_ready(resume: dict) -> str:
-    # Добавляем фразу, чтобы сработала проверка на "не готов к переезду"
-    return f"Formatted {resume.get('dummy')} with не готов к переезду"
-
-# Функция-замена для get_vacancy_desc, возвращает фиктивное описание вакансии
+# Для форматирования вакансии – достаточно вернуть любой словарь, который корректно обработается функцией format_vacancy
 def dummy_get_vacancy_desc(vacancy_id: int):
-    return {"dummy": f"vacancy content for {vacancy_id}"}
-
-# Функция-замена для форматирования вакансии
-def dummy_format_vacancy(vacancy: dict) -> str:
-    return f"Formatted {vacancy.get('dummy')}"
-
-# Функция-замена для ask_gpt, возвращает фиктивный ответ от GPT
-def dummy_ask_gpt(system_prompt: str, user_prompt: str) -> CandidateEvaluationAnswer:
-    return CandidateEvaluationAnswer(
-        target_stage=TargetStage.NEW,
-        comment="Test evaluation comment"
-    )
+    return {
+        "position": "Developer",
+        "money": "100000 RUB",
+        "body": "<p>Описание вакансии</p>",
+        "requirements": "<p>Требования</p>",
+        "conditions": "<p>Условия</p>"
+    }
 
 
-# Функция-замена для ask_gpt, которая не должна вызываться при наличии "не готов к переезду"
-def dummy_ask_gpt_should_not_be_called(system_prompt: str, user_prompt: str) -> CandidateEvaluationAnswer:
-    raise Exception("ask_gpt не должен вызываться, когда кандидат не готов к переезду")
+# Фиктивная реализация ask_gpt, возвращающая заранее заданный результат
+def dummy_ask_gpt(system_prompt: str, user_prompt: str):
+    return CandidateEvaluationAnswer(target_stage=TargetStage.NEW, comment="Хороший кандидат")
 
 
-# Тест для основного сценария (ветка с вызовом GPT)
-def test_evaluate_candidate(monkeypatch):
-    monkeypatch.setattr(ai_evaluation, "get_applicant", dummy_get_applicant)
-    monkeypatch.setattr(ai_evaluation, "get_resume", dummy_get_resume)
-    monkeypatch.setattr(ai_evaluation, "get_vacancy_desc", dummy_get_vacancy_desc)
-    monkeypatch.setattr(ai_evaluation, "ask_gpt", dummy_ask_gpt)
-    monkeypatch.setattr(ai_evaluation, "format_resume", dummy_format_resume)
-    monkeypatch.setattr(ai_evaluation, "format_vacancy", dummy_format_vacancy)
-
-    applicant_id = 123
-    vacancy_id = 456
-
-    # Вызываем тестируемую функцию
-    result = ai_evaluation.evaluate_candidate(applicant_id, vacancy_id)
-
-    # Проверяем, что результат соответствует фиктивному ответу от ask_gpt
-    assert result.target_stage == TargetStage.NEW
-    assert result.comment == "Test evaluation comment"
-
-    # Проверяем корректное формирование полного резюме
-    expected_resume = (
-        "Резюме 0 \n\n Formatted resume content for resume1 \n\n"
-        "Резюме 1 \n\n Formatted resume content for resume2 \n\n"
-    )
-    full_resume = ai_evaluation.get_formatted_full_resume(applicant_id)
-    assert expected_resume.strip() == full_resume.strip()
-
-    # Проверяем форматирование описания вакансии
-    expected_vacancy = "Formatted vacancy content for 456"
-    vacancy_description = ai_evaluation.get_formatted_vacancy(vacancy_id)
-    assert expected_vacancy == vacancy_description
+# Фиктивные функции, которые не должны вызываться в определённых сценариях
+def dummy_get_vacancy_desc_exception(vacancy_id: int):
+    raise Exception("get_vacancy_desc не должен вызываться")
 
 
-# Тест для сценария, когда резюме содержит фразу "не готов к переезду"
-def test_evaluate_candidate_not_ready(monkeypatch):
-    monkeypatch.setattr(ai_evaluation, "get_applicant", dummy_get_applicant)
-    monkeypatch.setattr(ai_evaluation, "get_resume", dummy_get_resume)
-    monkeypatch.setattr(ai_evaluation, "get_vacancy_desc", dummy_get_vacancy_desc)
-    # ask_gpt не должен вызываться, поэтому подменяем на функцию, которая бросает исключение
-    monkeypatch.setattr(ai_evaluation, "ask_gpt", dummy_ask_gpt_should_not_be_called)
-    # Используем форматирование, добавляющее "не готов к переезду"
-    monkeypatch.setattr(ai_evaluation, "format_resume", dummy_format_resume_with_not_ready)
-    monkeypatch.setattr(ai_evaluation, "format_vacancy", dummy_format_vacancy)
+def dummy_ask_gpt_exception(system_prompt: str, user_prompt: str):
+    raise Exception("ask_gpt не должен вызываться")
 
-    applicant_id = 789
-    vacancy_id = 101112
 
-    result = ai_evaluation.evaluate_candidate(applicant_id, vacancy_id)
-
-    # Проверяем, что при наличии фразы "не готов к переезду" возвращается ответ без вызова ask_gpt
+# Тест: Кандидат без резюме
+def test_evaluate_candidate_no_resume(monkeypatch):
+    monkeypatch.setattr("src.service.ai_evaluation.get_applicant", dummy_get_applicant_no_resume)
+    result = evaluate_candidate(1, 1)
+    assert result.comment == "Нет резюме"
     assert result.target_stage == TargetStage.RESERVE
+
+
+# Тест: Кандидат не готов к переезду (релокация с фразой "не готов к переезду", город не содержит "пермь")
+def test_evaluate_candidate_not_ready(monkeypatch):
+    monkeypatch.setattr("src.service.ai_evaluation.get_applicant", dummy_get_applicant_with_resume)
+    monkeypatch.setattr("src.service.ai_evaluation.get_resume", dummy_get_resume_not_ready)
+    # В этом сценарии функции, связанные с вакансией и GPT, не должны вызываться
+    monkeypatch.setattr("src.service.ai_evaluation.get_vacancy_desc", dummy_get_vacancy_desc_exception)
+    monkeypatch.setattr("src.service.ai_evaluation.ask_gpt", dummy_ask_gpt_exception)
+
+    result = evaluate_candidate(1, 1)
     assert result.comment == "Не готов к переезду в Пермь"
+    assert result.target_stage == TargetStage.RESERVE
+
+
+# Тест: Кандидат соответствует требованиям – вызывается GPT
+def test_evaluate_candidate_success(monkeypatch):
+    monkeypatch.setattr("src.service.ai_evaluation.get_applicant", dummy_get_applicant_with_resume)
+    monkeypatch.setattr("src.service.ai_evaluation.get_resume", dummy_get_resume_ready)
+    monkeypatch.setattr("src.service.ai_evaluation.get_vacancy_desc", dummy_get_vacancy_desc)
+    monkeypatch.setattr("src.service.ai_evaluation.ask_gpt", dummy_ask_gpt)
+
+    result = evaluate_candidate(1, 2)
+    assert result.comment == "Хороший кандидат"
+    assert result.target_stage == TargetStage.NEW
+
+
+# Тест для функции get_formatted_vacancy
+def test_get_formatted_vacancy(monkeypatch):
+    monkeypatch.setattr("src.service.ai_evaluation.get_vacancy_desc", dummy_get_vacancy_desc)
+    formatted = get_formatted_vacancy(123)
+    # Проверяем, что отформатированное описание вакансии содержит основные элементы
+    assert "Вакансия:" in formatted
+    assert "Ограничения по зп:" in formatted

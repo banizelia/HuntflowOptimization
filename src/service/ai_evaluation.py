@@ -17,15 +17,33 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate_candidate(applicant_id: int, vacancy_id: int):
-    full_resume = get_formatted_full_resume(applicant_id).lower()
-    phrases = ["не готов к переезду", "не могу переехать"]
+    applicant = get_applicant(applicant_id)
+    external_ids = applicant.get('external', [])
 
-    if any(phrase in full_resume for phrase in phrases):
-        answer = CandidateEvaluationAnswer(
+    if not external_ids:
+        return CandidateEvaluationAnswer(
+            comment="Нет резюме",
+            target_stage=TargetStage.RESERVE
+        )
+
+    external_ids.sort(key=lambda item: item.get('updated', 0), reverse=True)
+    last_resume_id = external_ids[0]['id']
+
+    resume = get_resume(applicant_id, last_resume_id)
+    unified = resume.get('resume', {})
+
+    city = unified.get('area', {}).get('city').get('name', '')
+    relocation_type = unified.get('relocation', {}).get('type').get('name', '')
+
+    phrases = ["не готов к переезду", "не могу переехать", "cannot move"]
+
+    if any(phrase.lower() in relocation_type.lower() for phrase in phrases) and "пермь" not in  city.lower():
+        return CandidateEvaluationAnswer(
             comment="Не готов к переезду в Пермь",
             target_stage=TargetStage.RESERVE
         )
-        return answer
+
+    full_resume = format_resume(unified=unified)
 
     vacancy_description = get_formatted_vacancy(vacancy_id)
 
@@ -64,29 +82,6 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int):
     logger.debug("Ответ GPT: target_stage: %s, comment: %s", answer.target_stage, answer.comment)
 
     return answer
-
-
-def get_formatted_full_resume(applicant_id):
-    applicant = get_applicant(applicant_id)
-    external_ids = [item for item in applicant.get('external', [])]
-
-    external_ids.sort(key=lambda x: x['updated'], reverse=True)
-
-    logger.debug("Найдено %d резюме для кандидата %s", len(external_ids), applicant_id)
-
-    # Берем только два последних резюме
-    external_ids = external_ids[:2]
-
-    full_resume = ''
-    for i, resume_data in enumerate(external_ids):
-        resume_id = resume_data['id']
-        logger.info("Обработка резюме %d с ID: %s для кандидата %s", i, resume_id, applicant_id)
-        resume = get_resume(applicant_id, resume_id)
-
-        logger.debug("Получено резюме %d для кандидата %s: %s", i, applicant_id, resume)
-        full_resume += f"Резюме {i} \n\n {format_resume(resume)} \n\n"
-
-    return full_resume
 
 
 def get_formatted_vacancy(vacancy_id):

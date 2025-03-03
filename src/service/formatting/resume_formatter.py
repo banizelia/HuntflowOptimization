@@ -52,13 +52,7 @@ def format_education(education: dict) -> str:
     return result
 
 
-def format_resume(resume: dict) -> str:
-    if resume is None:
-        return ""
-
-    unified = resume.get('resume', {})
-    logger.debug("Форматирование резюме в unified формате: %s", unified)
-
+def format_resume(unified: dict) -> str:
     if unified is None:
         return ""
 
@@ -70,51 +64,7 @@ def format_resume(resume: dict) -> str:
     salary_amount = wanted_salary.get('amount', '')
     salary_currency = wanted_salary.get('currency', '')
 
-    # Местоположение (из раздела area)
-    area = unified.get('area', {})
-    country = ""
-    city = ""
-    address = ""
-    if area:
-        if isinstance(area.get('country'), dict):
-            country = area.get('country', {}).get('name', '')
-        else:
-            country = area.get('country', '')
-        if isinstance(area.get('city'), dict):
-            city = area.get('city', {}).get('name', '')
-        else:
-            city = area.get('city', '')
-        address = area.get('address', '')
 
-    # Релокация
-    relocation = unified.get('relocation', {})
-    if relocation:
-        relocation_type = relocation.get('type', {}).get('name', 'Не указано')
-        relocation_areas = relocation.get('area', [])
-        if relocation_areas:
-            destinations = []
-            for area_item in relocation_areas:
-                a_country = ""
-                a_city = ""
-                a_address = ""
-                if isinstance(area_item.get('country'), dict):
-                    a_country = area_item.get('country', {}).get('name', '')
-                else:
-                    a_country = area_item.get('country', '')
-                if isinstance(area_item.get('city'), dict):
-                    a_city = area_item.get('city', {}).get('name', '')
-                else:
-                    a_city = area_item.get('city', '')
-                a_address = area_item.get('address', '')
-                details = ", ".join(filter(None, [a_city, a_country, a_address]))
-                if details:
-                    destinations.append(details)
-            relocation_destinations = "; ".join(destinations) if destinations else "Не указано"
-        else:
-            relocation_destinations = "Не указано"
-    else:
-        relocation_type = "Не указано"
-        relocation_destinations = "Не указано"
 
     # Навыки (skill_set — список строк)
     skills = unified.get('skill_set', [])
