@@ -32,8 +32,8 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int) -> CandidateEvaluatio
     resume = get_resume(applicant_id, last_resume_id)
     unified_resume = resume.get('resume', {})
 
-    city = unified_resume.get('area', {}).get('city').get('name', '')
-    relocation_type = unified_resume.get('relocation', {}).get('type').get('name', '')
+    city = unified_resume.get('area', {}).get('city', {}).get('name', '')
+    relocation_type = unified_resume.get('relocation', {}).get('type', {}).get('name', '')
 
     phrases = ["не готов к переезду", "не могу переехать", "cannot move"]
 
