@@ -1,7 +1,7 @@
 import os
 import logging
 from fastapi.responses import JSONResponse
-from src.api_clients.huntflow_api import get_status_id_by_name, update_candidate_status
+from src.api_clients.huntflow_api import get_status_id_by_name, update_applicant_status
 from src.service.ai_evaluation import evaluate_candidate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,6 +40,6 @@ async def handle_applicant(data: dict):
     comment = candidate_evaluation_answer.comment
 
     target_stage_id = get_status_id_by_name(target_stage_name)
-    update_candidate_status(applicant_id, target_stage_id, vacancy_id, f"Оценка от ИИ: \n\n {comment}")
+    update_applicant_status(applicant_id, target_stage_id, vacancy_id, f"Оценка от ИИ: \n\n {comment}")
 
     return JSONResponse(content={"success": "Данные обработаны"}, status_code=200)

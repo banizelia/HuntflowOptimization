@@ -88,7 +88,6 @@ def get_status_id_by_name(status_name: str):
         (status for status in statuses if status.get("name", "").lower() == status_name.lower()),
         None
     )
-    # todo: Если статус не найден, можно добавить обработку этой ситуации
     return status_info.get('id') if status_info else None
 
 
@@ -118,17 +117,17 @@ def get_vacancy(vacancy_id):
         return None
 
 
-def update_candidate_status(applicant_id: int, target_status_id: int, vacancy_id: int, comment: str) -> Optional[
+def update_applicant_status(applicant_id: int, target_status_id: int, vacancy_id: int, comment: str) -> Optional[
     Dict[str, Any]]:
     params = {"status": target_status_id, "vacancy": vacancy_id, "comment": comment}
     url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants/{applicant_id}/vacancy"
     try:
         response = send_request("PUT", url, json=params)
         data = response.json()
-        logging.info(f"Updated candidate {applicant_id} to status {target_status_id}.")
+        logging.info(f"Updated applicant {applicant_id} to status {target_status_id}.")
         return data
     except requests.RequestException as e:
-        logging.error(f"Error updating candidate status: {e}")
+        logging.error(f"Error updating applicant status: {e}")
         return None
 
 
@@ -138,7 +137,7 @@ def add_comment(applicant_id: int, vacancy_id: int, status_id: int, text: str) -
     try:
         response = send_request("PUT", url, json=params)
         data = response.json()
-        logging.info(f"Added comment to candidate {applicant_id}.")
+        logging.info(f"Added comment to applicant {applicant_id}.")
         return data
     except requests.RequestException as e:
         logging.error(f"Error adding comment: {e}")
@@ -191,16 +190,16 @@ def get_applicant(applicant_id):
 def get_applicants(vacancy_id: int, status_id: int) -> List[Dict[str, Any]]:
     url = f"{HUNTFLOW_BASE_URL}/accounts/{HUNTFLOW_ACCOUNT_ID}/applicants"
     params = {'vacancy': vacancy_id, 'status': status_id, 'limit': 100, 'offset': 0}
-    candidates = []
+    applicants = []
     while True:
         try:
             response = send_request("GET", url, params=params)
             data = response.json()
-            candidates.extend(data.get('items', []))
+            applicants.extend(data.get('items', []))
             if not data.get('next'):
                 break
             params['offset'] += params['limit']
         except requests.RequestException as e:
             logging.error(f"Error fetching applicants: {e}")
             break
-    return candidates
+    return applicants

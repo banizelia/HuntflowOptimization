@@ -131,7 +131,7 @@ def test_update_candidate_status(monkeypatch):
     dummy_data = {"status": "updated"}
     dummy_resp = DummyResponse(200, dummy_data)
     monkeypatch.setattr(huntflow_api, "send_request", lambda method, url, **kwargs: dummy_resp)
-    result = huntflow_api.update_candidate_status(1, 2, 3, "Test comment")
+    result = huntflow_api.update_applicant_status(1, 2, 3, "Test comment")
     assert result == dummy_data
 
 
