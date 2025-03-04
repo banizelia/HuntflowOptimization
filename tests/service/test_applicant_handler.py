@@ -90,7 +90,7 @@ async def test_handle_applicant_success(monkeypatch):
     # Подменяем зависимости
     monkeypatch.setattr(applicant_handler, "evaluate_candidate", dummy_evaluate_candidate)
     monkeypatch.setattr(applicant_handler, "get_status_id_by_name", dummy_get_status_id_by_name)
-    monkeypatch.setattr(applicant_handler, "update_candidate_status", dummy_update_candidate_status)
+    monkeypatch.setattr(applicant_handler, "update_applicant_status", dummy_update_candidate_status)
 
     data = {
         "event": {
