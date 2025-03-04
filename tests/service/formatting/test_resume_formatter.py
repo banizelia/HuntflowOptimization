@@ -1,5 +1,3 @@
-import pytest
-
 from src.service.formatting.resume_formatter import format_date, format_education, format_experience, format_resume
 
 
@@ -8,31 +6,38 @@ def test_format_date_empty():
     # Если передан пустой словарь – возвращаем "Не указана"
     assert format_date({}) == "Не указана"
 
+
 def test_format_date_no_year():
     # Если год отсутствует – возвращаем "Не указана"
     data = {"month": 1, "day": 1, "precision": "day"}
     assert format_date(data) == "Не указана"
 
+
 def test_format_date_year_precision():
     data = {"year": 2023, "precision": "year"}
     assert format_date(data) == "2023"
+
 
 def test_format_date_month_precision_with_month():
     data = {"year": 2023, "month": 5, "precision": "month"}
     assert format_date(data) == "2023-05"
 
+
 def test_format_date_month_precision_without_month():
     data = {"year": 2023, "precision": "month"}
     assert format_date(data) == "2023"
+
 
 def test_format_date_day_precision_with_full_date():
     data = {"year": 2023, "month": 5, "day": 15, "precision": "day"}
     assert format_date(data) == "2023-05-15"
 
+
 def test_format_date_day_precision_missing_day():
     data = {"year": 2023, "month": 5, "precision": "day"}
     # Если отсутствует day, возвращаем год
     assert format_date(data) == "2023"
+
 
 def test_format_date_unknown_precision():
     data = {"year": 2023, "precision": "unknown"}
@@ -131,6 +136,7 @@ def test_format_resume():
     assert "Developer" in result
     assert "MIT" in result
     assert "Computer Science" in result
+
 
 def test_format_resume_none():
     # Если входные данные отсутствуют, функция должна вернуть пустую строку

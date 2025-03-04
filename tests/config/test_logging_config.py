@@ -1,6 +1,9 @@
 import logging
+
 import pytest
+
 from src.config.logging_config import setup_logging
+
 
 def test_setup_logging_configures_root_logger():
     setup_logging()

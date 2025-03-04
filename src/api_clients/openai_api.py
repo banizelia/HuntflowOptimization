@@ -11,6 +11,7 @@ openai_client = BaseAPIClient(
     service_name="OpenAI"
 )
 
+
 def ask_gpt(system_prompt: str, user_prompt: str, response_format: Type[T], model: str = "gpt-4o") -> T:
     logger.info(f"Формируется запрос к {model} для GPT")
     completion = openai_client.ask(system_prompt, user_prompt, model, response_format=response_format)

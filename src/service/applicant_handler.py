@@ -1,12 +1,15 @@
-import os
 import logging
+import os
+
 from fastapi.responses import JSONResponse
+
 from src.api_clients.huntflow_api import get_status_id_by_name, update_applicant_status
 from src.service.ai_evaluation import evaluate_candidate
 
 logger = logging.getLogger()
 
 from_stage_name = os.getenv("HUNTFLOW_FROM_STAGE")
+
 
 async def handle_applicant(data: dict):
     event = data.get('event', {})
@@ -15,12 +18,16 @@ async def handle_applicant(data: dict):
     applicant_log_type = applicant_log.get('type', {})
     if applicant_log_type != "STATUS":
         logger.info("applicant_log_type = %s. Обработка только для 'STATUS'.", applicant_log_type)
-        return JSONResponse(content={"error": f"applicant_log_type = {applicant_log_type}. Обработка только для 'STATUS'."}, status_code=400)
+        return JSONResponse(
+            content={"error": f"applicant_log_type = {applicant_log_type}. Обработка только для 'STATUS'."},
+            status_code=400)
 
     status_name = applicant_log.get('status', {}).get('name')
     if from_stage_name.lower() != status_name.lower():
         logger.info("Статус кандидата: %s, не соответствует '%s'.", status_name, from_stage_name)
-        return JSONResponse(content={"error": f"Статус кандидата: {status_name}, не соответствует '{from_stage_name}'."}, status_code=400)
+        return JSONResponse(
+            content={"error": f"Статус кандидата: {status_name}, не соответствует '{from_stage_name}'."},
+            status_code=400)
 
     applicant_id = event.get('applicant', {}).get('id')
     if not applicant_id:
@@ -32,7 +39,8 @@ async def handle_applicant(data: dict):
         logger.error("ID вакансии не найден.")
         return JSONResponse(content={"error": "ID вакансии не найден."}, status_code=400)
 
-    logger.info("Кандидат перешёл на этап '%s'. ID кандидата: %s, ID вакансии: %s", from_stage_name, applicant_id, vacancy_id)
+    logger.info("Кандидат перешёл на этап '%s'. ID кандидата: %s, ID вакансии: %s", from_stage_name, applicant_id,
+                vacancy_id)
     candidate_evaluation_answer = evaluate_candidate(applicant_id, vacancy_id)
 
     target_stage_name = candidate_evaluation_answer.target_stage.value

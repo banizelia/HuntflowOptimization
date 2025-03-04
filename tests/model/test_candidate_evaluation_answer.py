@@ -13,6 +13,7 @@ def test_valid_candidate_evaluation_answer_with_enum():
     assert answer.target_stage == TargetStage.NEW
     assert answer.comment == "Все критерии удовлетворены."
 
+
 def test_missing_comment_field():
     with pytest.raises(ValidationError):
         CandidateEvaluationAnswer(

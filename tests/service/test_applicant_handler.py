@@ -1,26 +1,32 @@
-import os
 import json
+import os
+
 import pytest
 from fastapi.responses import JSONResponse
 
-from src.service import applicant_handler
-from src.model.target_stage import TargetStage
 from src.model.candidate_evaluation_answer import CandidateEvaluationAnswer
+from src.model.target_stage import TargetStage
+from src.service import applicant_handler
+
 
 # Фиктивные реализации зависимостей для успешного сценария
 def dummy_evaluate_candidate(candidate_id, vacancy_id):
     return CandidateEvaluationAnswer(target_stage=TargetStage.NEW, comment="Test comment")
 
+
 def dummy_get_status_id_by_name(status_name):
     return 1
 
+
 def dummy_update_candidate_status(candidate_id, target_status_id, vacancy_id, comment):
     return {"dummy": True}
+
 
 @pytest.fixture(autouse=True)
 def set_test_env(monkeypatch):
     monkeypatch.setenv("HUNTFLOW_FROM_STAGE", "Отклики")
     applicant_handler.from_stage_name = os.getenv("HUNTFLOW_FROM_STAGE") or "Отклики"
+
 
 @pytest.mark.asyncio
 async def test_handle_applicant_invalid_action_type():
@@ -36,6 +42,7 @@ async def test_handle_applicant_invalid_action_type():
     result = json.loads(response.body)
     assert "Обработка только для 'STATUS'" in result["error"]
 
+
 @pytest.mark.asyncio
 async def test_handle_applicant_status_mismatch():
     data = {
@@ -50,6 +57,7 @@ async def test_handle_applicant_status_mismatch():
     assert response.status_code == 400
     result = json.loads(response.body)
     assert "не соответствует" in result["error"]
+
 
 @pytest.mark.asyncio
 async def test_handle_applicant_missing_candidate_id():
@@ -68,6 +76,7 @@ async def test_handle_applicant_missing_candidate_id():
     result = json.loads(response.body)
     assert "ID кандидата не найден" in result["error"]
 
+
 @pytest.mark.asyncio
 async def test_handle_applicant_missing_vacancy_id():
     data = {
@@ -84,6 +93,7 @@ async def test_handle_applicant_missing_vacancy_id():
     assert response.status_code == 400
     result = json.loads(response.body)
     assert "ID вакансии не найден" in result["error"]
+
 
 @pytest.mark.asyncio
 async def test_handle_applicant_success(monkeypatch):
@@ -106,6 +116,7 @@ async def test_handle_applicant_success(monkeypatch):
     assert response.status_code == 200
     result = json.loads(response.body)
     assert result.get("success") == "Данные обработаны"
+
 
 @pytest.mark.asyncio
 async def test_handle_applicant_missing_event():

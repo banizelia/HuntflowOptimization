@@ -10,6 +10,7 @@ deepseek_client = BaseAPIClient(
     service_name="Deepseek"
 )
 
+
 def ask_deepseek(system_prompt: str, user_prompt: str, model: str = "deepseek-chat") -> str:
     logger.info(f"Формируется запрос к {model} для Deepseek")
     completion = deepseek_client.ask(system_prompt, user_prompt, model)

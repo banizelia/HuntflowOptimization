@@ -1,11 +1,13 @@
-import os
-import json
-import hmac
 import hashlib
-from fastapi.responses import JSONResponse
+import hmac
+import json
+import os
 
 import pytest
+from fastapi.responses import JSONResponse
+
 from src.service.request_handler import handle_request
+
 
 class DummyRequest:
     def __init__(self, headers, data, json_data):
@@ -25,8 +27,10 @@ class DummyRequest:
             raise Exception("No JSON")
         return self._json_data
 
+
 def compute_signature(secret_key: str, data: bytes) -> str:
     return hmac.new(secret_key.encode('utf-8'), data, digestmod=hashlib.sha256).hexdigest()
+
 
 @pytest.mark.asyncio
 async def test_handle_request_no_json(monkeypatch):
@@ -47,6 +51,7 @@ async def test_handle_request_no_json(monkeypatch):
     result = json.loads(response.body)
     assert result.get("error") == "Отсутствуют данные или неверный формат"
 
+
 @pytest.mark.asyncio
 async def test_handle_request_missing_signature():
     dummy_req = DummyRequest(
@@ -58,6 +63,7 @@ async def test_handle_request_missing_signature():
     assert response.status_code == 401
     result = json.loads(response.body)
     assert "Отсутствует заголовок X-Huntflow-Signature" in result.get("error", "")
+
 
 @pytest.mark.asyncio
 async def test_handle_request_invalid_signature(monkeypatch):
@@ -80,6 +86,7 @@ async def test_handle_request_invalid_signature(monkeypatch):
     result = json.loads(response.body)
     assert "Неверная подпись" in result.get("error", "")
 
+
 @pytest.mark.asyncio
 async def test_handle_request_ping_event(monkeypatch):
     monkeypatch.setenv("SECRET_KEY", "test_secret")
@@ -100,6 +107,7 @@ async def test_handle_request_ping_event(monkeypatch):
     assert response.status_code == 200
     result = json.loads(response.body)
     assert result == "Ping received"
+
 
 @pytest.mark.asyncio
 async def test_handle_request_applicant_event(monkeypatch):
@@ -128,6 +136,7 @@ async def test_handle_request_applicant_event(monkeypatch):
     result = json.loads(response.body)
     assert result.get("success") == "Handled applicant"
 
+
 @pytest.mark.asyncio
 async def test_handle_request_unknown_event(monkeypatch):
     monkeypatch.setenv("SECRET_KEY", "test_secret")
@@ -146,6 +155,7 @@ async def test_handle_request_unknown_event(monkeypatch):
     assert response.status_code == 400
     result = json.loads(response.body)
     assert "Неизвестное событие" in result.get("error", "")
+
 
 @pytest.mark.asyncio
 async def test_handle_request_missing_secret_key(monkeypatch):

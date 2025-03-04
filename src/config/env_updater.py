@@ -1,7 +1,8 @@
 import logging
 import os
-from dotenv import load_dotenv, set_key
 from pathlib import Path
+
+from dotenv import load_dotenv, set_key
 
 
 def update_and_reload_env(key: str, new_value: str):

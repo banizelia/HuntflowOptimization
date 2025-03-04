@@ -1,8 +1,10 @@
 import logging
 import os
+
 from openai import OpenAI
 
 logger = logging.getLogger()
+
 
 class BaseAPIClient:
     def __init__(self, token_env: str, service_name: str, base_url_env: str = None):

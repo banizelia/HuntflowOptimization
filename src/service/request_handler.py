@@ -1,9 +1,12 @@
 import hashlib
 import hmac
 import os
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
 from src.service.applicant_handler import handle_applicant
+
 
 async def handle_request(request: Request):
     signature_header = request.headers.get('X-Huntflow-Signature')
