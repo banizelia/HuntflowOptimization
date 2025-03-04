@@ -12,7 +12,7 @@ openai_client = BaseAPIClient(
 )
 
 def ask_gpt(system_prompt: str, user_prompt: str, response_format: Type[T], model: str = "gpt-4o") -> T:
-    logger.info(f"Формируется запрос к {model} для Deepseek")
+    logger.info(f"Формируется запрос к {model} для GPT")
     completion = openai_client.ask(system_prompt, user_prompt, model, response_format=response_format)
     answer = completion.choices[0].message.parsed
     logger.debug(f"Ответ от {model} получен: {answer}")

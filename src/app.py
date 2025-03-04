@@ -1,15 +1,17 @@
-from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from pathlib import Path
-import os
 
 env_path = Path(__file__).resolve().parent / "config" / ".env"
 load_dotenv(dotenv_path=env_path)
 
-app = FastAPI(title="Huntflow Optimization API")
-
+from fastapi import FastAPI, Request
+import os
 from src.service.request_handler import handle_request
-import config.logging_config
+from src.config.logging_config import setup_logging
+
+setup_logging()
+
+app = FastAPI(title="Huntflow Optimization API")
 
 @app.post("/huntflow/webhook/applicant")
 async def new_action(request: Request):
