@@ -9,7 +9,7 @@ from src.model.target_stage import TargetStage
 from src.service.formatting.resume_formatter import format_resume
 from src.service.formatting.vacancy_formatter import format_vacancy
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def get_latest_resume(applicant_id: int) -> dict:
@@ -53,7 +53,7 @@ def build_deepseek_prompts(vacancy_description: str, full_resume: str) -> tuple:
         "• \"target_stage\": одно из следующих значений:\n"
         "   - \"NEW\"      – кандидат соответствует требованиям вакансии по опыту и навыкам.\n"
         "   - \"RESERVE\"  – кандидат обладает потенциалом, но имеет несоответствия: по опыту или навыкам.\n"
-        "• \"comment\": краткий комментарий с обоснованием выбранной оценки, описывающий сильные и слабые стороны кандидата, "
+        "• \"comment\": краткий комментарий на русском языке с обоснованием выбранной оценки, описывающий сильные и слабые стороны кандидата, "
         "а также конкретные причины несоответствия, если таковые имеются. Максимум 20 слов."
     )
     user_prompt = (
@@ -80,7 +80,7 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int) -> CandidateEvaluatio
     full_resume = format_resume(unified_resume=unified_resume)
     vacancy_description = get_formatted_vacancy(vacancy_id)
 
-    logger.info("Отправка запроса в GPT для кандидата %s", applicant_id)
+    logger.info("Отправка запроса в deepseek для кандидата %s", applicant_id)
 
     deepseek_system_prompt, deepseek_user_prompt = build_deepseek_prompts(vacancy_description, full_resume)
 

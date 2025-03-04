@@ -17,7 +17,7 @@ LOGGING_CONFIG = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "INFO",  # общий уровень логирования
+        "level": "INFO",
     },
 }
 
