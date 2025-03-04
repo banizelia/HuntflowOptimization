@@ -2,7 +2,7 @@ import logging
 
 from src.service.formatting.html_cleaner import clean_html
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def format_vacancy(vacancy: dict) -> str:

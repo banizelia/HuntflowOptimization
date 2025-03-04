@@ -4,8 +4,7 @@ from fastapi.responses import JSONResponse
 from src.api_clients.huntflow_api import get_status_id_by_name, update_applicant_status
 from src.service.ai_evaluation import evaluate_candidate
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 from_stage_name = os.getenv("HUNTFLOW_FROM_STAGE")
 

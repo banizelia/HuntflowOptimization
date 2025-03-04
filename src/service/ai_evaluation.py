@@ -12,9 +12,7 @@ from src.model.target_stage import TargetStage
 from src.service.formatting.resume_formatter import format_resume
 from src.service.formatting.vacancy_formatter import format_vacancy
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger()
 
 def evaluate_candidate(applicant_id: int, vacancy_id: int) -> CandidateEvaluationAnswer:
     applicant = get_applicant(applicant_id)

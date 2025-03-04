@@ -1,7 +1,7 @@
 import logging
 import re
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def clean_html(raw_html: str) -> str:

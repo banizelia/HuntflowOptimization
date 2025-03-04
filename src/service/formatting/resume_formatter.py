@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 def format_date(date_dict: dict) -> str:
     if not date_dict:
