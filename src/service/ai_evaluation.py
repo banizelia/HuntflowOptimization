@@ -1,6 +1,7 @@
 import logging
 from datetime import date
 
+from src.api_clients.deepseek_api import ask_deepseek
 from src.api_clients.huntflow_api import (
     get_resume,
     get_vacancy_desc,
@@ -74,7 +75,17 @@ def evaluate_candidate(applicant_id: int, vacancy_id: int) -> CandidateEvaluatio
         f"Резюме кандидата:\n{full_resume}"
     )
 
-    answer = ask_gpt(system_prompt=system_prompt, user_prompt=user_prompt)
+    answer = ask_deepseek(system_prompt=system_prompt, user_prompt=user_prompt, model="deepseek-reasoner")
+
+    system_prompt = (
+        "Проанализируй запрос пользователя и представь его в structured output"
+    )
+
+    user_prompt = (
+        f"{answer}"
+    )
+
+    answer = ask_gpt(system_prompt=system_prompt, user_prompt=user_prompt, response_format=CandidateEvaluationAnswer, model="gpt-4o-mini")
 
     logger.info("Получен ответ GPT для кандидата %s", applicant_id)
     logger.debug("Ответ GPT: target_stage: %s, comment: %s", answer.target_stage, answer.comment)
