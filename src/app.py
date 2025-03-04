@@ -9,6 +9,7 @@ load_dotenv(dotenv_path=env_path)
 app = FastAPI(title="Huntflow Optimization API")
 
 from src.service.request_handler import handle_request
+import config.logging_config
 
 @app.post("/huntflow/webhook/applicant")
 async def new_action(request: Request):
